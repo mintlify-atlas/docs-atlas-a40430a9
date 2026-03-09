@@ -1,0 +1,71 @@
+{
+  "projectType": "saas",
+  "projectName": "EnvaSistema",
+  "projectDescription": "Mobile inventory management system for warehouse operations, tracking inbound/outbound inventory, transfers, and transformations with barcode scanning.",
+  "theme": "almond",
+  "primaryColor": "#0061A6",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/inbound-operations",
+              "features/outbound-operations",
+              "features/inventory-transfers",
+              "features/transformations"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guide/navigation",
+              "guide/barcode-scanning",
+              "guide/shift-management"
+            ]
+          },
+          {
+            "group": "Technical",
+            "pages": [
+              "technical/architecture",
+              "technical/ui-components",
+              "technical/development-setup"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Inventory inbound management (production, assembled goods, returns)",
+    "Inventory outbound management (sales, packaging, waste, donations)",
+    "Inventory transfers between locations",
+    "Package assembly and disassembly operations",
+    "Barcode scanning for inventory tracking",
+    "Shift and user management"
+  ],
+  "publicApiSurface": [
+    "HomeScreen",
+    "IngresosScreen (ProduccionNueva, IngresoArmado, DevolucionNoArmado, DevolucionMercaderia)",
+    "SalidasScreen (VentaPT, ArmarPaquetes, MermaMolino, Donaciones)",
+    "TransferenciaInventarioScreen",
+    "DesarmarPaquetesScreen",
+    "ScanningLayout component",
+    "MenuCard component",
+    "HomeHeader component",
+    "SecondaryHeader component",
+    "ShiftInfoRow component"
+  ]
+}
