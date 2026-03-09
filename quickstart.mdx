@@ -1,80 +1,375 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: 'Quick Start Guide'
+description: 'Get started with your first inventory operation in EnvaSistema'
 ---
 
-## Get started in three steps
+<Note>
+This guide walks you through performing your first inventory scan operation using the EnvaSistema mobile application. You'll learn how to navigate the interface and complete a production intake scan.
+</Note>
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before you begin, ensure you have:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+- The EnvaSistema mobile app installed on your handheld device
+- An active user account with proper credentials
+- Terminal configured and connected (device should show "ONLINE" status)
+- Access to the production floor or warehouse area with scannable QR codes
 
-### Step 2: Deploy your changes
+## Understanding the Home Screen
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+When you launch the app, you'll see the main **HomeScreen** with four primary operation categories:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+```kotlin HomeScreen.kt
+MenuCard(
+    title = "INGRESOS",
+    subtitle = "Producción, armados y devoluciones",
+    icon = Icons.Default.AddBox,
+    onClick = onIngresosClick
+)
+MenuCard(
+    title = "SALIDAS",
+    subtitle = "Ventas, paquetes, mermas y donaciones",
+    icon = Icons.Default.DoubleArrow,
+    onClick = onSalidasClick
+)
+MenuCard(
+    title = "MOVIMIENTOS",
+    subtitle = "Transferencia entre ubicaciones",
+    icon = Icons.Default.SwapHoriz,
+    onClick = onMovimientosClick
+)
+MenuCard(
+    title = "TRANSFORMACIONES",
+    subtitle = "Desarmar paquetes de producto terminado",
+    icon = Icons.Default.Build,
+    onClick = onTransformacionesClick
+)
+```
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+The home screen header displays:
+- **Device status** (e.g., "C66 · ONLINE")
+- **Current user** (e.g., "J. PÉREZ")
+- **Date and shift information** (e.g., "Lun, 9 de Marzo 2026" / "Turno Mañana")
 
-### Step 3: Go live
+<Steps>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+### Select an Operation Type
 
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+From the home screen, tap on **INGRESOS** (Inbound Operations). This section handles:
+- Production intake (Producción Nueva)
+- Assembly intake (Ingreso Armado)
+- Unassembled returns (Devolución No Armado)
+- Merchandise returns (Devolución Mercadería)
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+The app uses a navigation-based architecture. Each screen in the workflow is defined in `AppNavigation.kt` and follows a consistent pattern for user interaction.
 </Note>
+
+### Choose Production Intake
+
+Select **Producción Nueva** to begin scanning newly produced items. The app will navigate to the scanning interface:
+
+```kotlin AppNavigation.kt
+composable(Screen.ProduccionNueva.route) {
+    ProduccionNuevaScreen(onBackClick = { navController.popBackStack() })
+}
+```
+
+### Review the Scanning Interface
+
+The **ProduccionNuevaScreen** displays:
+
+1. **Header section** - Shows operation type and category
+2. **Info card** - Instructions for the current operation
+3. **Scan area** - Large interactive zone with QR code scanner icon
+4. **Counter** - Tracks number of codes scanned
+5. **Save button** - Enabled when at least one code is scanned
+
+```kotlin ProduccionNuevaScreen.kt
+// Info Alert Card
+Surface(
+    modifier = Modifier.fillMaxWidth(),
+    color = Color(0xFFE1F5FE),
+    shape = RoundedCornerShape(12.dp)
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(modifier = Modifier.width(6.dp).height(60.dp).background(Color(0xFF0061A6)))
+        
+        Icon(
+            imageVector = Icons.Default.RadioButtonChecked,
+            contentDescription = null,
+            tint = Color(0xFF0061A6),
+            modifier = Modifier.padding(horizontal = 12.dp).size(24.dp)
+        )
+        Text(
+            text = "Presione botón lateral para escanear código QR de la pieza / manga",
+            color = Color(0xFF0061A6),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+```
+
+### Scan QR Codes
+
+<Warning>
+Use the physical side button on your handheld terminal to trigger the scanner. Do not attempt to use the device camera or touchscreen for scanning.
+</Warning>
+
+To scan items:
+
+1. Position the terminal 4-6 inches from the QR code
+2. Press and hold the **side scan button**
+3. Wait for the beep confirmation
+4. The counter will increment automatically
+
+```kotlin ScanningLayout.kt
+// Scan Area Implementation
+Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(200.dp)
+        .border(1.dp, Color(0xFFBDBDBD), RoundedCornerShape(16.dp))
+        .clip(RoundedCornerShape(16.dp))
+        .clickable { scannCount++ },
+    contentAlignment = Alignment.Center
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(
+            color = Color(0xFFEEEEEE),
+            shape = CircleShape,
+            modifier = Modifier.size(80.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.QrCodeScanner,
+                contentDescription = null,
+                tint = Color(0xFF9E9E9E),
+                modifier = Modifier.padding(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Presione el botón lateral del terminal para escanear",
+            color = Color(0xFF607D8B),
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+```
+
+The **ScanningLayout** component is reusable across different operation types and provides consistent scanning behavior throughout the app.
+
+### Monitor Progress
+
+As you scan, watch the counter update in real-time:
+
+```kotlin ProduccionNuevaScreen.kt
+// Scanned Codes Counter
+Row(
+    modifier = Modifier.fillMaxWidth(),
+    verticalAlignment = Alignment.CenterVertically
+) {
+    Surface(
+        color = Color(0xFF0061A6),
+        shape = CircleShape,
+        modifier = Modifier.size(32.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(text = scannCount.toString(), color = Color.White, fontWeight = FontWeight.Bold)
+        }
+    }
+    Spacer(modifier = Modifier.width(12.dp))
+    Text(
+        text = "Códigos escaneados",
+        color = Color(0xFF455A64),
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold
+    )
+}
+```
+
+The circular badge displays the total number of scanned items, providing instant visual feedback.
+
+### Save Your Work
+
+Once you've scanned all items:
+
+1. Verify the count matches your physical inventory
+2. Tap the **"Guardar Ingreso"** button at the bottom
+3. Wait for confirmation
+
+```kotlin ProduccionNuevaScreen.kt
+Button(
+    onClick = { /* TODO */ },
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(56.dp),
+    shape = RoundedCornerShape(16.dp),
+    colors = ButtonDefaults.buttonColors(
+        containerColor = if (scannCount > 0) Color(0xFF0061A6) else Color(0xFFB0BEC5),
+        contentColor = Color.White
+    )
+) {
+    Icon(imageVector = Icons.Default.Save, contentDescription = null)
+    Spacer(modifier = Modifier.width(8.dp))
+    Text(text = "Guardar Ingreso", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+}
+```
+
+<Note>
+The save button is automatically disabled (gray) when no codes have been scanned. It becomes active (blue) as soon as you scan your first item.
+</Note>
+
+</Steps>
+
+## Understanding the ScanningLayout Component
+
+The app uses a reusable **ScanningLayout** component that powers all scanning operations. This component handles:
+
+- **State management** - Tracks scan count with `mutableIntStateOf`
+- **Dynamic styling** - Adapts colors based on operation type
+- **Validation** - Controls button enablement via `isSaveButtonEnabled` lambda
+- **Extensibility** - Supports extra content through composable slots
+
+```kotlin ScanningLayout.kt
+@Composable
+fun ScanningLayout(
+    title: String,
+    subtitle: String,
+    infoText: String,
+    onBackClick: () -> Unit,
+    onSaveClick: (Int) -> Unit,
+    counterLabel: String = "Códigos escaneados",
+    saveButtonText: String = "Guardar Ingreso",
+    saveButtonIcon: ImageVector = Icons.Default.Save,
+    primaryColor: Color = Color(0xFF0061A6),
+    infoCardBackground: Color = Color(0xFFE1F5FE),
+    infoIcon: ImageVector = Icons.Default.Radar,
+    infoIconColor: Color? = null,
+    isSaveButtonEnabled: ((Int) -> Boolean)? = null,
+    extraContent: @Composable (ColumnScope.() -> Unit)? = null
+)
+```
+
+This component is used across multiple screens:
+- **ProduccionNuevaScreen** - New production intake
+- **IngresoArmadoScreen** - Assembly intake
+- **VentaPTScreen** - Finished product sales
+- **TransferenciaInventarioScreen** - Inventory transfers
+
+## Navigation Flow
+
+The app follows a hierarchical navigation structure:
+
+```kotlin AppNavigation.kt
+sealed class Screen(val route: String) {
+    object Home : Screen("home")
+    
+    // Ingresos
+    object Ingresos : Screen("ingresos")
+    object ProduccionNueva : Screen("produccion_nueva")
+    object IngresoArmado : Screen("ingreso_armado")
+    object DevolucionNoArmado : Screen("devolucion_no_armado")
+    object DevolucionMercaderia : Screen("devolucion_mercaderia")
+    
+    // Salidas
+    object Salidas : Screen("salidas")
+    object VentaPT : Screen("venta_pt")
+    object ArmarPaquetes : Screen("armar_paquetes")
+    object MermaMolino : Screen("merma_molino")
+    object Donaciones : Screen("donaciones")
+    
+    // Others
+    object Movimientos : Screen("movimientos")
+    object Transformaciones : Screen("transformaciones")
+}
+```
+
+Each screen can navigate back using the `onBackClick` callback, which calls `navController.popBackStack()`.
+
+## Common Patterns
+
+### Color Coding by Operation Type
+
+Different operations use distinct color schemes:
+
+- **Ingresos** (Inbound) - Blue (`0xFF0061A6`)
+- **Salidas** (Outbound) - Varies by sub-operation
+- **Movimientos** (Transfers) - Gray (`0xFF455A64`)
+- **Transformaciones** (Transformations) - Red (`0xFFB71C1C`)
+
+### Consistent UI Structure
+
+All scanning screens follow this structure:
+
+1. **SecondaryHeader** - Title, subtitle, back button
+2. **Info card** - Operation-specific instructions
+3. **Scan area** - Large tap target with QR icon
+4. **Counter row** - Badge + label
+5. **Empty state** - "No hay códigos escaneados"
+6. **Action button** - Context-specific save/submit
+
+## Tips for Efficient Scanning
+
+<Card title="Best Practices" icon="lightbulb">
+  - Hold the terminal steady at optimal distance (4-6 inches)
+  - Ensure adequate lighting for QR code visibility
+  - Wait for the beep before moving to the next item
+  - Verify the counter increments after each scan
+  - Review total count before saving
+</Card>
+
+<Card title="Troubleshooting" icon="wrench">
+  - If scan fails, clean the scanner lens
+  - Check that device shows "ONLINE" status
+  - Ensure QR codes are not damaged or obscured
+  - Restart the app if counter doesn't update
+</Card>
+
+<Warning>
+Always complete your scanning session by tapping the save button. Navigating back without saving will discard all scanned data.
+</Warning>
+
+## Next Steps
+
+Now that you've completed your first inventory operation, explore these topics:
+
+<CardGroup cols={2}>
+  <Card
+    title="System Architecture"
+    icon="diagram-project"
+    href="/technical/architecture"
+  >
+    Learn about the app's technical structure and component organization
+  </Card>
+  
+  <Card
+    title="UI Components"
+    icon="palette"
+    href="/technical/ui-components"
+  >
+    Deep dive into reusable components like ScanningLayout and MenuCard
+  </Card>
+  
+  <Card
+    title="Inbound Operations"
+    icon="box"
+    href="/features/inbound-operations"
+  >
+    Explore all types of inbound operations and their specific workflows
+  </Card>
+  
+  <Card
+    title="Development Setup"
+    icon="code"
+    href="/technical/development-setup"
+  >
+    Set up your development environment to customize the app
+  </Card>
+</CardGroup>

@@ -1,0 +1,477 @@
+---
+title: 'Shift Management'
+description: 'Understanding user sessions, shift information, and account management in EnvaSistema'
+icon: 'clock'
+---
+
+## Overview
+
+EnvaSistema tracks user sessions and shift information to ensure proper accountability for warehouse operations. Each transaction is associated with a specific user and shift for auditing purposes.
+
+## User Session Information
+
+When you're logged into the app, your session information is always visible in the home header.
+
+### Status Badge
+
+The status badge appears in the top-left of the home screen (`HomeHeader.kt:46-68`):
+
+```kotlin
+Surface(
+    color = Color.White.copy(alpha = 0.15f),
+    shape = RoundedCornerShape(20.dp)
+) {
+    Row {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(Color(0xFF43A047)) // Green indicator
+        )
+        Text(text = statusText, color = Color.White) // "C66 · ONLINE"
+    }
+}
+```
+
+<Info>
+  The status badge shows:
+  - **Terminal ID**: Your warehouse terminal identifier (e.g., "C66")
+  - **Connection Status**: ONLINE (green dot) or OFFLINE (red dot)
+</Info>
+
+### User Badge
+
+The user badge displays your logged-in identity (`HomeHeader.kt:72-94`):
+
+```kotlin
+Surface(
+    color = Color.White.copy(alpha = 0.15f),
+    shape = RoundedCornerShape(20.dp)
+) {
+    Row {
+        Icon(imageVector = Icons.Default.Person)
+        Text(text = userName) // "J. PÉREZ"
+    }
+}
+```
+
+<Steps>
+  <Step title="Check Your Name">
+    Before starting any operation, verify the user badge shows YOUR name, not a coworker's.
+  </Step>
+  
+  <Step title="Verify Terminal ID">
+    Confirm you're using the correct terminal for your assigned area.
+  </Step>
+  
+  <Step title="Check Online Status">
+    Ensure the green indicator shows ONLINE before starting critical operations.
+  </Step>
+</Steps>
+
+## Shift Information Display
+
+The current date and shift are displayed below the header on the home screen (`ShiftInfoRow.kt:19-47`):
+
+```kotlin
+ShiftInfoRow(
+    dateText = "Lun, 9 de Marzo 2026",
+    shiftText = "Turno Mañana"
+)
+```
+
+### Date Format
+
+The date is displayed in Spanish format:
+- **Day abbreviation**: Lun, Mar, Mié, Jue, Vie, Sáb, Dom
+- **Day number**: 1-31
+- **Month**: enero, febrero, marzo, etc.
+- **Year**: Full 4-digit year
+
+Example: `"Lun, 9 de Marzo 2026"`
+
+### Shift Types
+
+Common shift labels include:
+
+<CardGroup cols={3}>
+  <Card title="Turno Mañana" icon="sunrise">
+    Morning shift
+  </Card>
+  <Card title="Turno Tarde" icon="sun">
+    Afternoon shift
+  </Card>
+  <Card title="Turno Noche" icon="moon">
+    Night shift
+  </Card>
+</CardGroup>
+
+<Info>
+  The shift badge has a green background (`#E8F5E9`) with green text (`#4CAF50`) to match the online status indicator theme.
+</Info>
+
+## Shift Badge Implementation
+
+The shift badge is styled for visibility (`ShiftInfoRow.kt:34-45`):
+
+```kotlin
+Surface(
+    color = Color(0xFFE8F5E9), // Light green background
+    shape = RoundedCornerShape(8.dp)
+) {
+    Text(
+        text = shiftText,
+        color = Color(0xFF4CAF50), // Green text
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold
+    )
+}
+```
+
+## Header Design
+
+The home header uses a distinctive blue curved design (`HomeHeader.kt:28-34`):
+
+```kotlin
+Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .clip(RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp))
+        .background(Color(0xFF0061A6))
+        .padding(bottom = 32.dp)
+)
+```
+
+<Tip>
+  The curved bottom corners (40dp radius) create a modern, app-like appearance that distinguishes the header from the content area.
+</Tip>
+
+## Logout Functionality
+
+The logout button is positioned in the top-right corner (`HomeHeader.kt:97-110`):
+
+```kotlin
+Surface(
+    color = Color.White.copy(alpha = 0.15f),
+    shape = RoundedCornerShape(12.dp),
+    onClick = onLogoutClick
+) {
+    Icon(
+        imageVector = Icons.AutoMirrored.Filled.Logout,
+        contentDescription = "Logout",
+        tint = Color.White
+    )
+}
+```
+
+### How to Logout
+
+<Steps>
+  <Step title="Navigate to Home">
+    Return to the home screen if you're in another operation
+  </Step>
+  
+  <Step title="Tap Logout Icon">
+    Tap the logout icon (arrow exiting a door) in the top-right corner
+  </Step>
+  
+  <Step title="Confirm">
+    Confirm you want to log out (if prompted)
+  </Step>
+  
+  <Step title="Login Screen">
+    You'll be returned to the login screen
+  </Step>
+</Steps>
+
+<Warning>
+  **Always log out** when:
+  - Ending your shift
+  - Taking an extended break
+  - Handing the terminal to another user
+  
+  Failing to log out means operations will be recorded under your user account!
+</Warning>
+
+## System Header Text
+
+The header displays the system branding (`HomeHeader.kt:116-129`):
+
+```kotlin
+Text(
+    text = "SISTEMA DE GESTIÓN",
+    color = Color.White.copy(alpha = 0.7f),
+    fontSize = 14.sp,
+    fontWeight = FontWeight.SemiBold,
+    letterSpacing = 0.5.sp
+)
+Text(
+    text = "Gestión de\nAlmacén Móvil",
+    color = Color.White,
+    fontSize = 30.sp,
+    fontWeight = FontWeight.Bold
+)
+```
+
+<Info>
+  The system title uses increased letter spacing (0.5sp) for a professional, uppercase appearance.
+</Info>
+
+## Connection Status Monitoring
+
+### Online Status (Green)
+
+When the terminal is connected:
+- Badge shows: **"[Terminal ID] · ONLINE"**
+- Green indicator dot (Color `#43A047`)
+- All operations available
+
+### Offline Status (Red)
+
+When network connectivity is lost:
+- Badge shows: **"[Terminal ID] · OFFLINE"**
+- Red indicator dot
+- Some operations may be restricted or unavailable
+- Data will sync when connection is restored
+
+<Warning>
+  If you see the **OFFLINE** status:
+  1. Check the terminal's WiFi connection
+  2. Verify you're in a coverage area
+  3. Restart the terminal if needed
+  4. Contact IT support if the issue persists
+  
+  **Do not perform critical operations while offline** unless specifically authorized.
+</Warning>
+
+## User Accountability
+
+Every operation in EnvaSistema is logged with:
+
+<Steps>
+  <Step title="User Identification">
+    Your user name (as shown in the user badge)
+  </Step>
+  
+  <Step title="Timestamp">
+    Date and time the operation was completed
+  </Step>
+  
+  <Step title="Shift Association">
+    The active shift when the operation occurred
+  </Step>
+  
+  <Step title="Terminal ID">
+    Which warehouse terminal was used
+  </Step>
+  
+  <Step title="Operation Details">
+    Type of operation and items processed
+  </Step>
+</Steps>
+
+<Info>
+  This audit trail ensures accountability and helps track inventory discrepancies or operational issues.
+</Info>
+
+## Best Practices
+
+<Tip>
+  **Start of Shift Checklist:**
+  1. Log in with your credentials
+  2. Verify your user name in the badge
+  3. Confirm the shift matches your schedule
+  4. Check for ONLINE status
+  5. Note your terminal ID
+</Tip>
+
+<Tip>
+  **During Your Shift:**
+  - Periodically verify you're still logged in
+  - Monitor the online status indicator
+  - Report any connectivity issues immediately
+  - Never use another user's login
+</Tip>
+
+<Tip>
+  **End of Shift Checklist:**
+  1. Complete all pending operations
+  2. Verify no unsaved work
+  3. Tap the logout button
+  4. Confirm logout was successful
+  5. Return terminal to charging station
+</Tip>
+
+## Multi-User Environment
+
+In warehouses with shared terminals:
+
+<Steps>
+  <Step title="Always Check Active User">
+    Before any operation, verify the user badge shows YOUR name
+  </Step>
+  
+  <Step title="Log Out Previous User">
+    If someone else's name appears, log them out before logging in
+  </Step>
+  
+  <Step title="Don't Share Credentials">
+    Each user must have their own login. Never share passwords.
+  </Step>
+  
+  <Step title="Report Unauthorized Access">
+    If you notice operations under your name that you didn't perform, report immediately
+  </Step>
+</Steps>
+
+<Warning>
+  **Security Violation**: Using another person's credentials or allowing someone to use yours is a serious policy violation and compromises audit integrity.
+</Warning>
+
+## Terminal Assignment
+
+Some warehouses assign specific terminals to areas or users:
+
+| Terminal ID | Typical Assignment |
+|-------------|--------------------|
+| C01-C20 | Receiving area |
+| C21-C40 | Picking area |
+| C41-C60 | Shipping area |
+| C61-C80 | Production area |
+
+<Info>
+  Your supervisor will tell you which terminal(s) you're authorized to use. The terminal ID is always visible in the status badge.
+</Info>
+
+## Shift Change Procedures
+
+### Outgoing Shift
+
+<Steps>
+  <Step title="15 Minutes Before End">
+    Begin wrapping up current operations
+  </Step>
+  
+  <Step title="Complete Pending Work">
+    Finish or properly document any incomplete tasks
+  </Step>
+  
+  <Step title="Handoff Notes">
+    If needed, communicate issues to incoming shift
+  </Step>
+  
+  <Step title="Logout">
+    Log out of all terminals you used
+  </Step>
+</Steps>
+
+### Incoming Shift
+
+<Steps>
+  <Step title="Login">
+    Log in with your credentials
+  </Step>
+  
+  <Step title="Verify Information">
+    Check user name, shift label, and terminal ID
+  </Step>
+  
+  <Step title="Review Handoffs">
+    Check for any notes from previous shift
+  </Step>
+  
+  <Step title="Begin Operations">
+    Start your shift workflow
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Wrong user name is displayed">
+    **Cause:** Previous user forgot to log out
+    
+    **Solution:**
+    1. Tap the logout button
+    2. Wait for login screen
+    3. Log in with your credentials
+    4. Verify your name appears correctly
+  </Accordion>
+  
+  <Accordion title="Wrong shift is shown">
+    **Cause:** System shift configuration may be incorrect
+    
+    **Solution:**
+    1. Note the discrepancy
+    2. Proceed with operations (they'll still be logged correctly)
+    3. Report to supervisor or IT
+    
+    Note: The shift display is informational; actual shift is determined by server timestamp.
+  </Accordion>
+  
+  <Accordion title="Can't log out">
+    **Cause:** App frozen or logout button unresponsive
+    
+    **Solution:**
+    1. Try navigating to home screen first
+    2. Wait a few seconds, try again
+    3. If still frozen, force close the app
+    4. Reopen and verify you're logged out
+    5. Log in again if needed
+  </Accordion>
+  
+  <Accordion title="Status shows OFFLINE">
+    **Causes:**
+    - WiFi disconnected
+    - Network outage
+    - Server maintenance
+    
+    **Solutions:**
+    1. Check terminal WiFi settings
+    2. Move to area with better coverage
+    3. Restart terminal
+    4. Contact IT if persistent
+    5. Switch to backup terminal if available
+  </Accordion>
+</AccordionGroup>
+
+## Date and Time Synchronization
+
+<Info>
+  The date and shift information are updated from the server to ensure accuracy across all terminals. If you notice incorrect dates:
+  
+  1. Check the terminal's system clock
+  2. Ensure WiFi is connected (ONLINE status)
+  3. Restart the app to force a sync
+  4. Report persistent issues to IT
+</Info>
+
+## Privacy and Security
+
+<Steps>
+  <Step title="Password Protection">
+    Keep your login credentials secure and private
+  </Step>
+  
+  <Step title="Auto-Logout">
+    Some configurations may automatically log you out after inactivity
+  </Step>
+  
+  <Step title="Session Monitoring">
+    IT can monitor active sessions and force logout if needed
+  </Step>
+  
+  <Step title="Audit Compliance">
+    All operations are permanently logged for compliance and quality control
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Navigation" icon="compass" href="/guide/navigation">
+    Learn about app navigation and menu structure
+  </Card>
+  <Card title="Barcode Scanning" icon="barcode" href="/guide/barcode-scanning">
+    Master barcode scanning techniques
+  </Card>
+</CardGroup>

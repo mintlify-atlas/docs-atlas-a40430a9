@@ -1,0 +1,261 @@
+---
+title: Installation
+description: Set up EnvaSistema on your Android device for warehouse inventory management
+---
+
+## Overview
+
+EnvaSistema is an Android mobile inventory management system designed for warehouse operations at Enva Enterprise. This guide will walk you through the installation process and configuration requirements.
+
+## System Requirements
+
+<Note>
+EnvaSistema requires Android devices with specific hardware capabilities for barcode scanning operations.
+</Note>
+
+Before installing EnvaSistema, ensure your Android device meets the following requirements:
+
+<Steps>
+  <Step title="Android Version">
+    **Minimum SDK:** Android 13 (API Level 33)
+    
+    **Target SDK:** Android 15 (API Level 35)
+    
+    Your device must be running Android 13 or higher to install and run EnvaSistema.
+  </Step>
+
+  <Step title="Hardware Requirements">
+    - **Barcode Scanner:** Physical side-button scanner for QR code reading
+    - **Display:** Minimum 1080×1920 resolution recommended
+    - **Storage:** At least 100MB free space
+    - **Network:** WiFi connectivity for server synchronization
+  </Step>
+
+  <Step title="Java Compatibility">
+    The app is compiled with Java 11 compatibility:
+    
+    ```kotlin
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    ```
+  </Step>
+</Steps>
+
+## Installation Methods
+
+### Method 1: APK Installation
+
+<Steps>
+  <Step title="Download APK">
+    Download the latest EnvaSistema APK file from your organization's distribution channel or build server.
+  </Step>
+
+  <Step title="Enable Unknown Sources">
+    On your Android device:
+    
+    1. Go to **Settings** > **Security**
+    2. Enable **Install unknown apps** for your file manager or browser
+    3. Grant permission to install from the source
+  </Step>
+
+  <Step title="Install APK">
+    1. Open the downloaded APK file
+    2. Tap **Install**
+    3. Wait for the installation to complete
+    4. Tap **Open** to launch EnvaSistema
+  </Step>
+</Steps>
+
+### Method 2: Build from Source
+
+<Note>
+This method is recommended for developers who need to customize the application or build internal releases.
+</Note>
+
+<Steps>
+  <Step title="Clone Repository">
+    Clone the EnvaSistema repository to your development machine:
+    
+    ```bash
+    git clone <repository-url>
+    cd envasistema
+    ```
+  </Step>
+
+  <Step title="Configure Build Environment">
+    Ensure you have the following installed:
+    
+    - Android Studio Arctic Fox or later
+    - Android SDK with API Level 35
+    - Gradle 8.0+
+    - Kotlin 2.0+
+  </Step>
+
+  <Step title="Build Configuration">
+    The app uses Gradle Kotlin DSL for build configuration. Review the build file:
+    
+    ```kotlin build.gradle.kts
+    android {
+        namespace = "com.example.envasistema"
+        compileSdk = 35
+    
+        defaultConfig {
+            applicationId = "com.example.envasistema"
+            minSdk = 33
+            targetSdk = 35
+            versionCode = 1
+            versionName = "1.0"
+        }
+    
+        buildFeatures {
+            compose = true
+        }
+    }
+    ```
+  </Step>
+
+  <Step title="Build APK">
+    Build the application using Android Studio or command line:
+    
+    ```bash
+    # Debug build
+    ./gradlew assembleDebug
+    
+    # Release build
+    ./gradlew assembleRelease
+    ```
+    
+    The APK will be generated in `app/build/outputs/apk/`
+  </Step>
+</Steps>
+
+## Application Configuration
+
+### Manifest Configuration
+
+The AndroidManifest.xml defines the core application settings:
+
+```xml AndroidManifest.xml
+<application
+    android:allowBackup="true"
+    android:dataExtractionRules="@xml/data_extraction_rules"
+    android:fullBackupContent="@xml/backup_rules"
+    android:icon="@mipmap/ic_launcher"
+    android:label="@string/app_name"
+    android:roundIcon="@mipmap/ic_launcher_round"
+    android:supportsRtl="true"
+    android:theme="@style/Theme.EnvaSistema">
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.EnvaSistema">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>
+</application>
+```
+
+### Main Activity Setup
+
+The application entry point uses Jetpack Compose for modern Android UI:
+
+```kotlin MainActivity.kt
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            EnvaSistemaTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppNavigation()
+                }
+            }
+        }
+    }
+}
+```
+
+### Dependencies
+
+<Warning>
+Ensure all dependencies are properly synced before building the application.
+</Warning>
+
+EnvaSistema uses the following core dependencies:
+
+<CodeGroup>
+```kotlin Core Libraries
+implementation(libs.androidx.core.ktx)
+implementation(libs.androidx.lifecycle.runtime.ktx)
+implementation(libs.androidx.activity.compose)
+```
+
+```kotlin Jetpack Compose
+implementation(platform(libs.androidx.compose.bom))
+implementation(libs.androidx.compose.ui)
+implementation(libs.androidx.compose.ui.graphics)
+implementation(libs.androidx.compose.ui.tooling.preview)
+implementation(libs.androidx.compose.material3)
+implementation(libs.androidx.compose.material.icons.extended)
+```
+
+```kotlin Navigation
+implementation(libs.androidx.navigation.compose)
+```
+</CodeGroup>
+
+## Verification
+
+After installation, verify the app is working correctly:
+
+<Steps>
+  <Step title="Launch Application">
+    Tap the EnvaSistema icon on your device to launch the app.
+  </Step>
+
+  <Step title="Check Home Screen">
+    You should see the home screen with four main menu options:
+    
+    - **INGRESOS** - Production, assembly, and returns
+    - **SALIDAS** - Sales, packages, waste, and donations
+    - **MOVIMIENTOS** - Transfer between locations
+    - **TRANSFORMACIONES** - Disassemble finished product packages
+  </Step>
+
+  <Step title="Test Scanner">
+    Navigate to any scanning screen and press the physical side button on your device to test the barcode scanner functionality.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### App Won't Install
+
+- Verify your device meets the minimum Android 13 requirement
+- Check that "Install unknown apps" permission is enabled
+- Ensure you have sufficient storage space
+
+### Scanner Not Working
+
+- Confirm your device has a physical scanner button
+- Check scanner hardware is properly configured
+- Verify scanner drivers are installed
+
+### Build Errors
+
+- Sync Gradle files: **File** > **Sync Project with Gradle Files**
+- Clean and rebuild: `./gradlew clean build`
+- Ensure Android SDK components are up to date
+
+## Next Steps
+
+<Card title="Quick Start" icon="rocket" href="/quickstart">
+  Learn how to perform your first inventory operation with EnvaSistema
+</Card>

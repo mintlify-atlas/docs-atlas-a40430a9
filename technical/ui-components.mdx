@@ -1,0 +1,665 @@
+---
+title: 'UI Components Reference'
+description: 'Reusable Jetpack Compose components in EnvaSistema'
+icon: 'cubes'
+---
+
+## Overview
+
+EnvaSistema provides a collection of reusable Compose components designed for warehouse management interfaces. All components follow Material 3 design principles and support customization through parameters.
+
+<Note>
+All components are located in `app/src/main/java/com/example/envasistema/ui/components/`
+</Note>
+
+## Component Library
+
+### ScanningLayout
+
+A comprehensive layout for barcode scanning workflows with integrated counter, info card, and action button.
+
+<CodeGroup>
+
+```kotlin Usage Example
+@Composable
+fun ProduccionNuevaScreen(onBackClick: () -> Unit) {
+    ScanningLayout(
+        title = "INGRESOS",
+        subtitle = "Producción Nueva",
+        infoText = "Escanee los códigos de los productos terminados nuevos",
+        onBackClick = onBackClick,
+        onSaveClick = { count ->
+            // Handle save with scan count
+        },
+        primaryColor = Color(0xFF43A047)
+    )
+}
+```
+
+```kotlin Full Signature
+@Composable
+fun ScanningLayout(
+    title: String,
+    subtitle: String,
+    infoText: String,
+    onBackClick: () -> Unit,
+    onSaveClick: (Int) -> Unit,
+    counterLabel: String = "Códigos escaneados",
+    saveButtonText: String = "Guardar Ingreso",
+    saveButtonIcon: ImageVector = Icons.Default.Save,
+    primaryColor: Color = Color(0xFF0061A6),
+    infoCardBackground: Color = Color(0xFFE1F5FE),
+    infoIcon: ImageVector = Icons.Default.Radar,
+    infoIconColor: Color? = null,
+    isSaveButtonEnabled: ((Int) -> Boolean)? = null,
+    extraContent: @Composable (ColumnScope.() -> Unit)? = null
+)
+```
+
+</CodeGroup>
+
+#### Parameters
+
+<ParamField path="title" type="String" required>
+  Header title displayed in the secondary header
+</ParamField>
+
+<ParamField path="subtitle" type="String" required>
+  Header subtitle displayed below the title
+</ParamField>
+
+<ParamField path="infoText" type="String" required>
+  Instructional text shown in the info card
+</ParamField>
+
+<ParamField path="onBackClick" type="() -> Unit" required>
+  Callback invoked when the back button is clicked
+</ParamField>
+
+<ParamField path="onSaveClick" type="(Int) -> Unit" required>
+  Callback invoked when save button is clicked, receives scan count as parameter
+</ParamField>
+
+<ParamField path="counterLabel" type="String" default="Códigos escaneados">
+  Label text displayed next to the scan counter
+</ParamField>
+
+<ParamField path="saveButtonText" type="String" default="Guardar Ingreso">
+  Text displayed on the save button
+</ParamField>
+
+<ParamField path="saveButtonIcon" type="ImageVector" default="Icons.Default.Save">
+  Icon displayed on the save button
+</ParamField>
+
+<ParamField path="primaryColor" type="Color" default="Color(0xFF0061A6)">
+  Primary theme color used for header, accents, and buttons
+</ParamField>
+
+<ParamField path="infoCardBackground" type="Color" default="Color(0xFFE1F5FE)">
+  Background color of the info alert card
+</ParamField>
+
+<ParamField path="infoIcon" type="ImageVector" default="Icons.Default.Radar">
+  Icon displayed in the info card
+</ParamField>
+
+<ParamField path="infoIconColor" type="Color?" default="null">
+  Custom color for the info icon (defaults to primaryColor if null)
+</ParamField>
+
+<ParamField path="isSaveButtonEnabled" type="((Int) -> Boolean)?" default="null">
+  Custom validation function to enable/disable save button based on scan count
+</ParamField>
+
+<ParamField path="extraContent" type="@Composable (ColumnScope.() -> Unit)?" default="null">
+  Additional content to display above the info card
+</ParamField>
+
+#### Features
+
+- **Scan Simulation**: Click the scan area to increment counter (for testing)
+- **Automatic Button State**: Save button enables/disables based on scan count
+- **Customizable Colors**: Supports themed variants for different workflows
+- **Scrollable Content**: Handles overflow with vertical scrolling
+
+<Accordion title="View Complete Implementation">
+
+```kotlin ScanningLayout.kt
+package com.example.envasistema.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Radar
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun ScanningLayout(
+    title: String,
+    subtitle: String,
+    infoText: String,
+    onBackClick: () -> Unit,
+    onSaveClick: (Int) -> Unit,
+    counterLabel: String = "Códigos escaneados",
+    saveButtonText: String = "Guardar Ingreso",
+    saveButtonIcon: ImageVector = Icons.Default.Save,
+    primaryColor: Color = Color(0xFF0061A6),
+    infoCardBackground: Color = Color(0xFFE1F5FE),
+    infoIcon: ImageVector = Icons.Default.Radar,
+    infoIconColor: Color? = null,
+    isSaveButtonEnabled: ((Int) -> Boolean)? = null,
+    extraContent: @Composable (ColumnScope.() -> Unit)? = null
+) {
+    var scannCount by remember { mutableIntStateOf(0) }
+    val buttonEnabled = isSaveButtonEnabled?.invoke(scannCount) ?: (scannCount > 0)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+    ) {
+        SecondaryHeader(
+            title = title,
+            subtitle = subtitle,
+            backgroundColor = primaryColor,
+            onBackClick = onBackClick
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            extraContent?.invoke(this)
+
+            if (extraContent != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Info Alert Card
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = infoCardBackground,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.width(6.dp).height(60.dp).background(primaryColor))
+                    
+                    Icon(
+                        imageVector = infoIcon,
+                        contentDescription = null,
+                        tint = infoIconColor ?: primaryColor,
+                        modifier = Modifier.padding(horizontal = 12.dp).size(24.dp)
+                    )
+                    Text(
+                        text = infoText,
+                        color = primaryColor,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(end = 16.dp, top = 8.dp, bottom = 8.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Scan Area
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .border(1.dp, Color(0xFFBDBDBD), RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { scannCount++ },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Surface(
+                        color = Color(0xFFEEEEEE),
+                        shape = CircleShape,
+                        modifier = Modifier.size(80.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            contentDescription = null,
+                            tint = Color(0xFF9E9E9E),
+                            modifier = Modifier.padding(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Presione el botón lateral del terminal para escanear",
+                        color = Color(0xFF607D8B),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Scanned Codes Counter
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    color = primaryColor,
+                    shape = CircleShape,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(text = scannCount.toString(), color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = counterLabel,
+                    color = Color(0xFF455A64),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            if (scannCount == 0) {
+                Text(
+                    text = "No hay códigos escaneados",
+                    color = Color(0xFFBDBDBD),
+                    fontSize = 15.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Footer Button
+            Button(
+                onClick = { if (buttonEnabled) onSaveClick(scannCount) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (buttonEnabled) primaryColor else Color(0xFFB0BEC5),
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(imageVector = saveButtonIcon, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = saveButtonText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+```
+
+</Accordion>
+
+---
+
+### MenuCard
+
+A clickable card component for menu navigation with icon, title, subtitle, and accent styling.
+
+<CodeGroup>
+
+```kotlin Usage Example
+MenuCard(
+    title = "INGRESOS",
+    subtitle = "Producción, armados y devoluciones",
+    icon = Icons.Default.AddBox,
+    primaryColor = Color(0xFF0061A6),
+    onClick = { navController.navigate("ingresos") }
+)
+```
+
+```kotlin Full Signature
+@Composable
+fun MenuCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    primaryColor: Color = Color(0xFF0061A6),
+    iconBackgroundColor: Color = Color(0xFFE1F5FE),
+    iconTintColor: Color = Color(0xFF01579B),
+    rightIcon: ImageVector? = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+    onClick: () -> Unit
+)
+```
+
+</CodeGroup>
+
+#### Parameters
+
+<ParamField path="title" type="String" required>
+  Primary text displayed prominently
+</ParamField>
+
+<ParamField path="subtitle" type="String" required>
+  Secondary descriptive text
+</ParamField>
+
+<ParamField path="icon" type="ImageVector" required>
+  Icon displayed on the left side
+</ParamField>
+
+<ParamField path="primaryColor" type="Color" default="Color(0xFF0061A6)">
+  Color for the accent strip and title text
+</ParamField>
+
+<ParamField path="iconBackgroundColor" type="Color" default="Color(0xFFE1F5FE)">
+  Background color behind the icon
+</ParamField>
+
+<ParamField path="iconTintColor" type="Color" default="Color(0xFF01579B)">
+  Icon tint color
+</ParamField>
+
+<ParamField path="rightIcon" type="ImageVector?" default="Icons.AutoMirrored.Filled.KeyboardArrowRight">
+  Optional icon displayed on the right (null to hide)
+</ParamField>
+
+<ParamField path="onClick" type="() -> Unit" required>
+  Callback invoked when the card is clicked
+</ParamField>
+
+#### Layout Structure
+
+```
+┌─────────────────────────────────────┐
+│┃ [Icon] │ TITLE            →       │
+│┃        │ Subtitle text             │
+└─────────────────────────────────────┘
+```
+
+---
+
+### HomeHeader
+
+The main application header with status badge, user info, and logout button.
+
+<CodeGroup>
+
+```kotlin Usage Example
+HomeHeader(
+    statusText = "C66 · ONLINE",
+    userName = "J. PÉREZ",
+    onLogoutClick = { /* Handle logout */ }
+)
+```
+
+```kotlin Full Signature
+@Composable
+fun HomeHeader(
+    statusText: String,
+    userName: String,
+    onLogoutClick: () -> Unit
+)
+```
+
+</CodeGroup>
+
+#### Parameters
+
+<ParamField path="statusText" type="String" required>
+  Status text displayed with green indicator (e.g., "C66 · ONLINE")
+</ParamField>
+
+<ParamField path="userName" type="String" required>
+  User name displayed in the header badge
+</ParamField>
+
+<ParamField path="onLogoutClick" type="() -> Unit" required>
+  Callback invoked when logout button is clicked
+</ParamField>
+
+#### Features
+
+- **Online Status Indicator**: Green dot with status text
+- **User Badge**: Displays current user with person icon
+- **Logout Button**: Material icon button with semi-transparent background
+- **App Title**: Multi-line title with subtitle styling
+- **Rounded Bottom**: Curved bottom corners for modern design
+
+---
+
+### SecondaryHeader
+
+A simplified header for secondary screens with back navigation, title, and subtitle.
+
+<CodeGroup>
+
+```kotlin Usage Example
+SecondaryHeader(
+    title = "INGRESOS",
+    subtitle = "Producción Nueva",
+    backgroundColor = Color(0xFF43A047),
+    onBackClick = { navController.popBackStack() }
+)
+```
+
+```kotlin Full Signature
+@Composable
+fun SecondaryHeader(
+    title: String,
+    subtitle: String,
+    backgroundColor: Color = Color(0xFF0061A6),
+    onBackClick: () -> Unit
+)
+```
+
+</CodeGroup>
+
+#### Parameters
+
+<ParamField path="title" type="String" required>
+  Primary header title
+</ParamField>
+
+<ParamField path="subtitle" type="String" required>
+  Secondary descriptive text
+</ParamField>
+
+<ParamField path="backgroundColor" type="Color" default="Color(0xFF0061A6)">
+  Background color of the header
+</ParamField>
+
+<ParamField path="onBackClick" type="() -> Unit" required>
+  Callback invoked when back button is clicked
+</ParamField>
+
+---
+
+### ShiftInfoRow
+
+A compact row displaying date and shift information with badge styling.
+
+<CodeGroup>
+
+```kotlin Usage Example
+ShiftInfoRow(
+    dateText = "Lun, 9 de Marzo 2026",
+    shiftText = "Turno Mañana"
+)
+```
+
+```kotlin Full Signature
+@Composable
+fun ShiftInfoRow(
+    dateText: String,
+    shiftText: String
+)
+```
+
+</CodeGroup>
+
+#### Parameters
+
+<ParamField path="dateText" type="String" required>
+  Date text displayed on the left
+</ParamField>
+
+<ParamField path="shiftText" type="String" required>
+  Shift text displayed in a green badge on the right
+</ParamField>
+
+#### Visual Design
+
+- Date: Gray text, medium weight
+- Shift Badge: Green background (`#E8F5E9`) with green text (`#4CAF50`)
+
+---
+
+## Color Schemes
+
+EnvaSistema uses contextual colors for different workflows:
+
+<CardGroup cols={2}>
+  <Card title="Ingresos" icon="arrow-down" color="#43A047">
+    Green theme (`#43A047`)
+  </Card>
+  <Card title="Salidas" icon="arrow-up" color="#E53935">
+    Red theme (`#E53935`)
+  </Card>
+  <Card title="Movimientos" icon="arrows-left-right" color="#FB8C00">
+    Orange theme (`#FB8C00`)
+  </Card>
+  <Card title="Transformaciones" icon="wrench" color="#6D4C41">
+    Brown theme (`#6D4C41`)
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Component Composition">
+    Prefer composing existing components rather than creating new ones. For example, use `ScanningLayout` with `extraContent` parameter for custom sections.
+  </Accordion>
+
+  <Accordion title="State Management">
+    Components manage their own internal UI state (like `scannCount` in `ScanningLayout`). Parent screens receive state through callbacks when actions occur.
+  </Accordion>
+
+  <Accordion title="Theme Consistency">
+    Use the `primaryColor` parameter to maintain visual consistency across related screens. Each workflow category should use its designated color.
+  </Accordion>
+
+  <Accordion title="Accessibility">
+    All interactive components include proper content descriptions and maintain minimum touch target sizes of 48dp.
+  </Accordion>
+</AccordionGroup>
+
+## Common Patterns
+
+### Screen with Scanning
+
+```kotlin
+@Composable
+fun MyScreen(onBackClick: () -> Unit) {
+    ScanningLayout(
+        title = "CATEGORY",
+        subtitle = "Screen Title",
+        infoText = "Instructions for the user",
+        onBackClick = onBackClick,
+        onSaveClick = { count ->
+            // Process scanned items
+        },
+        primaryColor = Color(0xFF43A047)
+    )
+}
+```
+
+### Menu Navigation Screen
+
+```kotlin
+@Composable
+fun CategoryScreen(
+    onBackClick: () -> Unit,
+    onOption1Click: () -> Unit,
+    onOption2Click: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        SecondaryHeader(
+            title = "CATEGORY",
+            subtitle = "Select an option",
+            onBackClick = onBackClick
+        )
+        
+        Column(modifier = Modifier.padding(20.dp)) {
+            MenuCard(
+                title = "Option 1",
+                subtitle = "Description",
+                icon = Icons.Default.Add,
+                onClick = onOption1Click
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            MenuCard(
+                title = "Option 2",
+                subtitle = "Description",
+                icon = Icons.Default.Remove,
+                onClick = onOption2Click
+            )
+        }
+    }
+}
+```
+
+## Component Testing
+
+All components support Compose previews for rapid development:
+
+```kotlin
+@Preview(showBackground = true)
+@Composable
+fun MenuCardPreview() {
+    EnvaSistemaTheme {
+        MenuCard(
+            title = "INGRESOS",
+            subtitle = "Producción, armados y devoluciones",
+            icon = Icons.Default.AddBox,
+            onClick = {}
+        )
+    }
+}
+```
+
+<Tip>
+Use Android Studio's Compose Preview feature to view and interact with components without running the full app.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/technical/architecture">
+    Understand the app structure
+  </Card>
+  <Card title="Development Setup" icon="laptop-code" href="/technical/development-setup">
+    Set up your development environment
+  </Card>
+</CardGroup>

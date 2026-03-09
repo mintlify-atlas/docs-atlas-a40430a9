@@ -1,0 +1,593 @@
+---
+title: "Transformations"
+description: "Disassemble finished product packages back into individual pieces for inventory reallocation"
+icon: "screwdriver-wrench"
+---
+
+## Overview
+
+Transformations in EnvaSistema allow you to reverse the packaging process by disassembling finished product (PT) packages back into their component pieces. This operation is essential for inventory flexibility, allowing you to break down packaged goods when individual pieces are needed.
+
+<Note>
+Transformations are currently one-directional: **Desarmar Paquetes** (Disassemble Packages). The reverse operation, assembling pieces into packages, is handled through **Salidas → Armar Paquetes**.
+</Note>
+
+---
+
+## Desarmar Paquetes
+
+### Purpose
+
+The Desarmar Paquetes (Disassemble Packages) operation allows you to:
+
+- Break down finished product packages into individual pieces
+- Deactivate the PT package QR code in the system
+- Automatically return component pieces to the parts inventory
+- Reallocate inventory from finished goods to raw materials or components
+
+<Warning>
+Disassembling a package permanently deactivates the PT QR code. The package identity is lost, though the pieces are preserved in inventory.
+</Warning>
+
+---
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Order Cancellations" icon="ban">
+    Customer cancels order after package assembly - break down to free up pieces
+  </Card>
+  <Card title="Inventory Reallocation" icon="right-left">
+    Need individual pieces urgently and packaged units are available
+  </Card>
+  <Card title="Error Correction" icon="triangle-exclamation">
+    Package was assembled incorrectly and needs to be dismantled
+  </Card>
+  <Card title="Demand Changes" icon="chart-line">
+    Market demand shifts from packages to individual piece sales
+  </Card>
+</CardGroup>
+
+---
+
+## Workflow
+
+<Steps>
+  <Step title="Navigate to Transformations">
+    From the main menu, tap **Transformaciones** to go directly to the Desarmar Paquetes screen.
+    
+    <Note>
+    Like Movimientos, Transformaciones navigates directly to a single operation screen without a sub-menu.
+    </Note>
+  </Step>
+  
+  <Step title="Review Operation Instructions">
+    Read the "¿Qué hace esta operación?" (What does this operation do?) card which explains:
+    
+    - **Step 1**: Scan the QR code of the PT package to disassemble
+    - **Step 2**: The system will deactivate the PT code
+    - **Step 3**: Component pieces will be automatically returned to stock
+    
+    This card includes an inventory icon and color-coded step indicators.
+  </Step>
+  
+  <Step title="Scan Package to Disassemble">
+    Press the **lateral button** to scan the QR code of the finished product package. The info banner states:
+    
+    "Escanee el código QR del PT a desarmar con el botón lateral del terminal"
+    
+    The scanning interface shows:
+    - Standard scan area with QR icon
+    - Counter labeled "PT a desarmar" (PT to disassemble)
+    - Real-time feedback on each scan
+  </Step>
+  
+  <Step title="Review Package Selection">
+    Verify the scanned package count in the counter badge. Ensure only the intended packages were scanned.
+    
+    <Warning>
+    Each scan represents a complete package that will be disassembled. Double-check before proceeding.
+    </Warning>
+  </Step>
+  
+  <Step title="Execute Disassembly">
+    Tap the **"Ejecutar Desarmado"** button (with Build/wrench icon) to perform the transformation.
+    
+    The system will:
+    - Deactivate the PT package QR code
+    - Identify all component pieces in the package
+    - Automatically return those pieces to inventory
+    - Update stock levels for individual pieces
+  </Step>
+  
+  <Step title="Verify Transformation">
+    After completion:
+    - The PT package code is no longer valid
+    - Component pieces are available in the parts inventory
+    - Original package structure is recorded in history
+  </Step>
+</Steps>
+
+---
+
+## Screen Layout
+
+The Desarmar Paquetes screen (DesarmarPaquetesScreen.kt:23-113) features a distinctive design with educational elements.
+
+### Header Section
+
+- **Title**: "Desarmar Paquetes"
+- **Subtitle**: "TRANSFORMACIONES"
+- **Color**: Dark grey (`Color(0xFF455A64)`) instead of standard blue
+
+### Instructional Card
+
+A prominent white card appears at the top with the heading:
+
+**"¿Qué hace esta operación?"** (What does this operation do?)
+
+<Tabs>
+  <Tab title="Card Header">
+    The header includes:
+    - Dark grey rounded square icon background
+    - White inventory/box icon (`Icons.Default.Inventory2`)
+    - 40dp icon container
+    - Bold title: "¿Qué hace esta operación?"
+    - Explanatory subtitle in gray
+  </Tab>
+  
+  <Tab title="Explanation Text">
+    Description reads:
+    
+    "Escanee el Producto Terminado (PT) para dar de baja su código y reingresar las piezas que lo componen al inventario de partes."
+    
+    (Scan the Finished Product (PT) to deactivate its code and return the component pieces to the parts inventory.)
+    
+    - 12sp font size
+    - Gray color (`#757575`)
+    - 16sp line height for readability
+  </Tab>
+  
+  <Tab title="Process Steps">
+    Three numbered steps with color-coded badges:
+    
+    **Step 1** (Blue badge)
+    - "Escanee el código QR del Paquete PT a desarmar"
+    - Scan the PT package QR code
+    
+    **Step 2** (Blue badge)  
+    - "El sistema dará de baja el código del PT"
+    - The system will deactivate the PT code
+    
+    **Step 3** (Green badge)
+    - "Las piezas serán reingresadas automáticamente al stock"
+    - Pieces will be automatically returned to stock
+    
+    Each step has:
+    - 20dp circular badge
+    - White step number
+    - 12dp spacing from text
+    - 8dp vertical spacing between steps
+  </Tab>
+</Tabs>
+
+### Step Item Component
+
+<Accordion title="Step Item Implementation">
+  Each step uses a custom `StepItem` composable (DesarmarPaquetesScreen.kt:93-107):
+  
+  ```kotlin
+  @Composable
+  fun StepItem(number: String, text: String, isLast: Boolean = false) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+          Surface(
+              color = if (number == "3") Color(0xFF4CAF50) else Color(0xFF0061A6),
+              shape = CircleShape,
+              modifier = Modifier.size(20.dp)
+          ) {
+              Box(contentAlignment = Alignment.Center) {
+                  Text(text = number, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+              }
+          }
+          Spacer(modifier = Modifier.width(12.dp))
+          Text(text = text, color = Color(0xFF757575), fontSize = 12.sp)
+      }
+  }
+  ```
+  
+  Step 3 uses green (`#4CAF50`) to indicate successful completion, while steps 1-2 use blue.
+</Accordion>
+
+### Scanning Interface
+
+Below the instructional card:
+
+- **Info Banner**: Light blue background (`Color(0xFFE1F5FE)`) with standard scanning instruction
+- **Scan Area**: Standard QR code scanning interface
+- **Counter Label**: "PT a desarmar" (PT to disassemble)
+- **Empty State**: "No hay códigos escaneados" when count is zero
+
+### Action Button
+
+**"Ejecutar Desarmado"** (Execute Disassembly) button features:
+
+- Build/wrench icon (`Icons.Default.Build`)
+- Dark grey color (`Color(0xFF455A64)`) matching the header
+- 56dp height with 16dp rounded corners
+- Disabled (gray) when no items scanned
+- Enabled (dark grey) when ready
+
+---
+
+## Visual Design
+
+### Color Scheme
+
+Unlike other operations that use blue, Transformations uses a distinctive dark grey theme:
+
+| Element | Color | Hex Code | Purpose |
+|---------|-------|----------|----------|
+| Primary Color | Dark Grey | `#455A64` | Headers and buttons |
+| Step 1-2 Badges | Blue | `#0061A6` | Process steps |
+| Step 3 Badge | Green | `#4CAF50` | Completion step |
+| Info Background | Light Blue | `#E1F5FE` | Info banner |
+| Text Primary | Dark Grey | `#455A64` | Titles |
+| Text Secondary | Medium Grey | `#757575` | Descriptions |
+
+<Note>
+The grey color scheme visually distinguishes Transformations from Inbound (blue) and Outbound (blue/red) operations.
+</Note>
+
+### Icon Strategy
+
+- **Inventory2 Icon**: Represents package/inventory concept in the instructional card
+- **Build Icon**: Wrench/construction icon suggests assembly/disassembly work
+- **QrCodeScanner Icon**: Standard scanning interface icon
+- **Numbered Badges**: Custom circular badges with white numbers
+
+---
+
+## What Happens During Disassembly
+
+### Database Operations
+
+<Steps>
+  <Step title="Package Lookup">
+    System retrieves the PT package record using the scanned QR code
+  </Step>
+  
+  <Step title="Component Identification">
+    System queries which pieces comprise the package based on assembly history
+  </Step>
+  
+  <Step title="PT Deactivation">
+    The package QR code is marked as inactive/deactivated in the database
+  </Step>
+  
+  <Step title="Piece Reactivation">
+    Each component piece's individual QR code is reactivated
+  </Step>
+  
+  <Step title="Inventory Updates">
+    - Finished goods inventory decreases by 1 package
+    - Parts inventory increases by the number of component pieces
+    - Location tracking updates to reflect piece availability
+  </Step>
+  
+  <Step title="Transaction Logging">
+    The transformation is recorded in the transaction history for audit purposes
+  </Step>
+</Steps>
+
+### Data Preservation
+
+<Accordion title="Historical Records">
+  While the package is disassembled, EnvaSistema maintains:
+  
+  - **Assembly History**: Original record of when/how the package was created
+  - **Component List**: Which specific pieces were in the package
+  - **Disassembly Transaction**: When and why the package was broken down
+  - **User Activity**: Who performed the transformation
+  
+  This historical data supports:
+  - Audit trails for inventory management
+  - Analysis of packaging/disassembly patterns
+  - Traceability for quality control
+  - Operational reporting
+</Accordion>
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Before Disassembling">
+    **Verification Steps:**
+    - Confirm the package actually needs to be disassembled
+    - Check if pieces are genuinely needed or if alternatives exist
+    - Verify the package is physically accessible
+    - Ensure you have authorization to perform the transformation
+    
+    **Documentation:**
+    - Note the reason for disassembly (order cancellation, error, etc.)
+    - Record any external reference numbers if required
+    - Communicate with relevant departments (sales, production, etc.)
+  </Accordion>
+  
+  <Accordion title="During the Operation">
+    **Scanning:**
+    - Read the instructional card carefully if unfamiliar with the process
+    - Scan only the PT packages you intend to disassemble
+    - Verify the counter shows the correct number
+    - Double-check package codes before confirming
+    
+    **Physical Handling:**
+    - Have a designated area for disassembled pieces
+    - Keep component pieces organized during disassembly
+    - Ensure QR codes on individual pieces are still readable
+    - Tag or label pieces if they'll be stored separately
+  </Accordion>
+  
+  <Accordion title="After Disassembly">
+    **Inventory Management:**
+    - Verify pieces appear in the parts inventory
+    - Check that piece counts are correct
+    - Update any external inventory tracking systems
+    - Ensure pieces are stored in the correct location
+    
+    **Communication:**
+    - Notify relevant teams that pieces are available
+    - Update any pending orders that need these pieces
+    - Document the transformation for shift handoff
+    - File any required paperwork or reports
+  </Accordion>
+  
+  <Accordion title="Error Prevention">
+    **Common Mistakes:**
+    - Scanning the wrong package code
+    - Disassembling packages that are scheduled for shipment
+    - Not verifying piece availability needs before disassembling
+    - Losing track of component pieces after disassembly
+    
+    **Safety Checks:**
+    - Review the three-step process in the instructional card
+    - Understand that PT codes are permanently deactivated
+    - Confirm authorization before disassembling high-value packages
+    - Keep physical packages organized during digital processing
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Relationship to Other Operations
+
+### Assembly vs. Disassembly
+
+<Tabs>
+  <Tab title="Armar Paquetes (Assembly)">
+    **Location**: Salidas → Armar Paquetes
+    
+    **Process**:
+    1. Scan individual pieces
+    2. Create a new PT package code
+    3. Group pieces under the package ID
+    4. Remove pieces from individual inventory
+    5. Add package to finished goods inventory
+    
+    **Result**: Multiple pieces → One package
+  </Tab>
+  
+  <Tab title="Desarmar Paquetes (Disassembly)">
+    **Location**: Transformaciones → Desarmar Paquetes
+    
+    **Process**:
+    1. Scan PT package code
+    2. Identify component pieces
+    3. Deactivate package code
+    4. Reactivate individual piece codes
+    5. Remove package from finished goods
+    6. Add pieces back to parts inventory
+    
+    **Result**: One package → Multiple pieces
+  </Tab>
+</Tabs>
+
+### Workflow Integration
+
+```
+Producción Nueva (Inbound)
+    ↓
+[Individual Pieces in Inventory]
+    ↓
+Armar Paquetes (Outbound)
+    ↓
+[PT Packages in Finished Goods]
+    ↓ (if needed)
+Desarmar Paquetes (Transformation)
+    ↓
+[Individual Pieces in Inventory] ← Back to starting point
+    ↓
+Venta de PT (Outbound) ← Alternative path
+```
+
+<Note>
+Disassembly allows you to return to an earlier state in the inventory lifecycle, providing operational flexibility.
+</Note>
+
+---
+
+## Navigation Context
+
+<Accordion title="Direct Navigation">
+  Transformaciones, like Movimientos, provides direct access to a single operation:
+  
+  From AppNavigation.kt:101-103:
+  ```kotlin
+  composable(Screen.Transformaciones.route) {
+      DesarmarPaquetesScreen(onBackClick = { navController.popBackStack() })
+  }
+  ```
+  
+  **Navigation Flow:**
+  1. Home Screen → Tap "Transformaciones"
+  2. Desarmar Paquetes Screen → Opens immediately
+  3. Back Button → Returns to home screen
+  
+  There is no sub-menu like Ingresos or Salidas.
+</Accordion>
+
+---
+
+## Example Scenarios
+
+<Tabs>
+  <Tab title="Order Cancellation">
+    **Situation**: Customer cancels order after 5 packages were assembled
+    
+    **Steps**:
+    1. Navigate to Transformaciones
+    2. Read the instructional card to understand the process
+    3. Scan the 5 PT package QR codes
+    4. Counter shows "5 PT a desarmar"
+    5. Tap "Ejecutar Desarmado"
+    6. System deactivates 5 package codes
+    7. Component pieces return to inventory (e.g., 20 pieces if each package had 4 pieces)
+    8. Pieces become available for other orders
+    
+    **Result**: Order freed up, pieces reallocated
+  </Tab>
+  
+  <Tab title="Urgent Piece Demand">
+    **Situation**: Production needs 10 specific pieces immediately, but they're all in packages
+    
+    **Steps**:
+    1. Identify which packages contain needed pieces
+    2. Access Transformaciones
+    3. Review the three-step process
+    4. Scan packages containing the needed pieces
+    5. Execute disassembly
+    6. Extract the 10 needed pieces from the returned inventory
+    7. Remaining pieces stay in inventory for future use
+    
+    **Result**: Urgent demand met, excess pieces preserved
+  </Tab>
+  
+  <Tab title="Assembly Error">
+    **Situation**: Wrong pieces were assembled into a package
+    
+    **Steps**:
+    1. Identify the incorrectly assembled package
+    2. Navigate to Transformaciones
+    3. Read instructions if unsure about the process
+    4. Scan the incorrect package code
+    5. Confirm "1 PT a desarmar"
+    6. Execute disassembly
+    7. Incorrect package is dissolved
+    8. Individual pieces return to inventory
+    9. Reassemble package correctly using Salidas → Armar Paquetes
+    
+    **Result**: Error corrected, package rebuilt properly
+  </Tab>
+  
+  <Tab title="Market Demand Shift">
+    **Situation**: Customers now want individual pieces instead of packages
+    
+    **Steps**:
+    1. Assess current finished goods inventory (e.g., 50 packages)
+    2. Access Transformaciones
+    3. Systematically disassemble packages in batches
+    4. Scan 10-20 packages at a time for manageability
+    5. Execute disassembly for each batch
+    6. Monitor parts inventory growth
+    7. Stop when sufficient pieces are available
+    8. Pieces now ready for individual sales (Venta de PT)
+    
+    **Result**: Inventory restructured to match demand
+  </Tab>
+</Tabs>
+
+---
+
+## Technical Implementation
+
+### ScanningLayout Integration
+
+<Accordion title="Component Configuration">
+  The Desarmar Paquetes screen uses the reusable `ScanningLayout` with custom parameters:
+  
+  ```kotlin
+  ScanningLayout(
+      title = "Desarmar Paquetes",
+      subtitle = "TRANSFORMACIONES",
+      infoText = "Escanee el código QR del PT a desarmar con el botón lateral del terminal",
+      onBackClick = onBackClick,
+      onSaveClick = { /* TODO */ },
+      counterLabel = "PT a desarmar",
+      saveButtonText = "Ejecutar Desarmado",
+      saveButtonIcon = Icons.Default.Build,
+      primaryColor = Color(0xFF455A64),
+      infoCardBackground = Color(0xFFE1F5FE),
+      extraContent = { /* Instructional card */ }
+  )
+  ```
+  
+  Key customizations:
+  - Dark grey primary color instead of blue
+  - Build icon instead of Save icon
+  - Custom button text emphasizing "execution"
+  - Instructional card in extraContent slot
+</Accordion>
+
+### Educational Design Pattern
+
+The screen implements an educational design pattern with the "¿Qué hace esta operación?" card:
+
+- **Purpose**: Explains unfamiliar operation before execution
+- **Location**: Top of screen (extraContent parameter)
+- **Components**: Icon, title, description, step-by-step process
+- **Visual Hierarchy**: Icon → Title → Description → Steps
+
+<Note>
+This pattern could be adopted for other complex operations to improve user understanding and reduce errors.
+</Note>
+
+---
+
+## Related Operations
+
+<CardGroup cols={3}>
+  <Card title="Armar Paquetes" icon="box" href="/features/outbound-operations#armar-paquetes">
+    Assemble pieces into packages (reverse operation)
+  </Card>
+  <Card title="Inbound Operations" icon="arrow-down-to-bracket" href="/features/inbound-operations">
+    Add pieces to inventory initially
+  </Card>
+  <Card title="Venta de PT" icon="shopping-cart" href="/features/outbound-operations#venta-de-pt">
+    Sell individual pieces or packages
+  </Card>
+</CardGroup>
+
+---
+
+## Summary
+
+Desarmar Paquetes is a critical operation for inventory flexibility:
+
+<CardGroup cols={2}>
+  <Card title="Key Function" icon="rotate-left">
+    Reverse package assembly to recover individual pieces
+  </Card>
+  <Card title="Impact" icon="database">
+    PT code deactivated, pieces returned to inventory
+  </Card>
+  <Card title="Use Cases" icon="lightbulb">
+    Order changes, errors, demand shifts, urgent needs
+  </Card>
+  <Card title="Design" icon="palette">
+    Educational interface with step-by-step guidance
+  </Card>
+</CardGroup>
+
+<Warning>
+**Remember**: Package disassembly permanently deactivates the PT code. While pieces are preserved, the original package identity is lost. Use this operation deliberately and with proper authorization.
+</Warning>

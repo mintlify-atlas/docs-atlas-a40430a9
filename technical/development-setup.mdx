@@ -1,0 +1,528 @@
+---
+title: 'Development Setup'
+description: 'Set up your development environment for EnvaSistema'
+icon: 'laptop-code'
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+<CardGroup cols={2}>
+  <Card title="Android Studio" icon="android">
+    Hedgehog (2023.1.1) or newer
+  </Card>
+  <Card title="JDK" icon="java">
+    Java Development Kit 11 or higher
+  </Card>
+  <Card title="Kotlin" icon="code">
+    Kotlin 2.2.10 (handled by Gradle)
+  </Card>
+  <Card title="Android SDK" icon="mobile">
+    API Level 33+ (Android 13)
+  </Card>
+</CardGroup>
+
+## Initial Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd EnvaSistema
+```
+
+### 2. Open in Android Studio
+
+1. Launch **Android Studio**
+2. Select **Open an Existing Project**
+3. Navigate to the cloned `EnvaSistema` directory
+4. Click **OK**
+
+<Note>
+Android Studio will automatically detect the Gradle configuration and begin syncing dependencies. This may take several minutes on the first run.
+</Note>
+
+### 3. Configure SDK
+
+Ensure the required SDK components are installed:
+
+<Steps>
+  <Step title="Open SDK Manager">
+    Go to **Tools → SDK Manager** in Android Studio
+  </Step>
+  <Step title="Install SDK Platform">
+    Under **SDK Platforms**, check **Android 14.0 (API 35)** and **Android 13.0 (API 33)**
+  </Step>
+  <Step title="Install Build Tools">
+    Under **SDK Tools**, ensure **Android SDK Build-Tools 35.0.0** is installed
+  </Step>
+  <Step title="Apply Changes">
+    Click **Apply** and wait for the installation to complete
+  </Step>
+</Steps>
+
+## Project Configuration
+
+### Gradle Version Catalog
+
+EnvaSistema uses Gradle's version catalog for dependency management. All versions are centralized in:
+
+```toml gradle/libs.versions.toml
+[versions]
+agp = "9.1.0"
+coreKtx = "1.10.1"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+lifecycleRuntimeKtx = "2.6.1"
+activityCompose = "1.8.0"
+kotlin = "2.2.10"
+composeBom = "2024.09.00"
+navigationCompose = "2.8.5"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+# ... additional dependencies
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+```
+
+### Build Configuration
+
+The app module is configured in `app/build.gradle.kts`:
+
+```kotlin app/build.gradle.kts
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+}
+
+android {
+    namespace = "com.example.envasistema"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.example.envasistema"
+        minSdk = 33
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    
+    buildFeatures {
+        compose = true
+    }
+}
+```
+
+<Warning>
+**Minimum SDK**: EnvaSistema requires Android 13 (API 33) or higher. Ensure your test devices meet this requirement.
+</Warning>
+
+## Building the Project
+
+### Sync Gradle
+
+After any configuration changes:
+
+```bash
+./gradlew sync
+```
+
+Or use Android Studio's **Sync Project with Gradle Files** button (elephant icon).
+
+### Clean Build
+
+```bash
+./gradlew clean build
+```
+
+### Debug Build
+
+```bash
+./gradlew assembleDebug
+```
+
+The APK will be generated at:
+```
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Release Build
+
+```bash
+./gradlew assembleRelease
+```
+
+<Note>
+Release builds require signing configuration. See the [Signing Configuration](#signing-configuration) section below.
+</Note>
+
+## Running the App
+
+### Using Android Studio
+
+1. Connect an Android device via USB or launch an emulator
+2. Click the **Run** button (green play icon) or press `Shift + F10`
+3. Select your target device from the dropdown
+4. Wait for the app to install and launch
+
+### Using Command Line
+
+```bash
+# Install on connected device
+./gradlew installDebug
+
+# Launch the app
+adb shell am start -n com.example.envasistema/.MainActivity
+```
+
+## Development Tools
+
+### Jetpack Compose Preview
+
+EnvaSistema components include `@Preview` annotations for rapid UI development:
+
+```kotlin
+@Preview(showBackground = true, device = "spec:width=1080px,height=1920px,dpi=400")
+@Composable
+fun HomeScreenPreview() {
+    EnvaSistemaTheme {
+        HomeScreen({}, {}, {}, {})
+    }
+}
+```
+
+<Tip>
+**View Previews**: Open any Composable file and click **Split** or **Design** mode in the top-right corner to see live previews.
+</Tip>
+
+### Layout Inspector
+
+Debug your Compose UI hierarchy:
+
+1. Run the app on a device/emulator
+2. Go to **Tools → Layout Inspector**
+3. Select your app process
+4. Explore the component tree and properties
+
+### Logcat
+
+View runtime logs:
+
+```kotlin
+import android.util.Log
+
+Log.d("EnvaSistema", "Scan count: $count")
+Log.e("EnvaSistema", "Error saving data", exception)
+```
+
+Filter logs in Android Studio's **Logcat** window using the tag `EnvaSistema`.
+
+## Code Style
+
+### Kotlin Style Guide
+
+EnvaSistema follows the official [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html).
+
+Key conventions:
+- **Indentation**: 4 spaces
+- **Line length**: Max 120 characters
+- **Naming**:
+  - Classes: `PascalCase`
+  - Functions: `camelCase`
+  - Constants: `UPPER_SNAKE_CASE`
+  - Composables: `PascalCase`
+
+### Format Code
+
+Format code automatically:
+- **Windows/Linux**: `Ctrl + Alt + L`
+- **macOS**: `Cmd + Option + L`
+
+Or run:
+```bash
+./gradlew ktlintFormat
+```
+
+## Testing
+
+### Unit Tests
+
+Run unit tests:
+
+```bash
+./gradlew test
+```
+
+Test files are located in:
+```
+app/src/test/java/com/example/envasistema/
+```
+
+### Instrumented Tests
+
+Run instrumented tests on a device:
+
+```bash
+./gradlew connectedAndroidTest
+```
+
+Test files are located in:
+```
+app/src/androidTest/java/com/example/envasistema/
+```
+
+### Compose UI Tests
+
+Example Compose test:
+
+```kotlin
+@Test
+fun testMenuCardClick() {
+    composeTestRule.setContent {
+        EnvaSistemaTheme {
+            MenuCard(
+                title = "Test",
+                subtitle = "Subtitle",
+                icon = Icons.Default.Add,
+                onClick = { /* verify action */ }
+            )
+        }
+    }
+    
+    composeTestRule.onNodeWithText("Test").performClick()
+    // Assert expected behavior
+}
+```
+
+## Debugging
+
+### Breakpoints
+
+Set breakpoints in Kotlin code:
+1. Click the gutter next to a line number
+2. Run the app in **Debug** mode (`Shift + F9`)
+3. The app will pause at breakpoints
+
+### Compose Recomposition Debugging
+
+Enable recomposition highlighting:
+
+```kotlin
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalInspectionMode
+
+val isInspecting = LocalInspectionMode.current
+if (isInspecting) {
+    // Preview-specific code
+}
+```
+
+## Signing Configuration
+
+### Debug Signing
+
+Debug builds are automatically signed with a debug keystore.
+
+### Release Signing
+
+For production releases, configure signing:
+
+1. Create a keystore:
+   ```bash
+   keytool -genkey -v -keystore release.keystore -alias envasistema -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+2. Add to `app/build.gradle.kts`:
+   ```kotlin
+   android {
+       signingConfigs {
+           create("release") {
+               storeFile = file("release.keystore")
+               storePassword = "your-store-password"
+               keyAlias = "envasistema"
+               keyPassword = "your-key-password"
+           }
+       }
+       buildTypes {
+           release {
+               signingConfig = signingConfigs.getByName("release")
+           }
+       }
+   }
+   ```
+
+<Warning>
+**Security**: Never commit keystores or passwords to version control. Use environment variables or gradle.properties for sensitive data.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Gradle Sync Failed">
+    **Solution**:
+    1. Check internet connection
+    2. Invalidate caches: **File → Invalidate Caches / Restart**
+    3. Delete `.gradle` and `.idea` folders, then re-sync
+    4. Verify JDK version matches project requirements
+  </Accordion>
+
+  <Accordion title="Compose Preview Not Showing">
+    **Solution**:
+    1. Ensure you're in **Split** or **Design** mode
+    2. Check that the function is annotated with `@Preview`
+    3. Rebuild the project: **Build → Rebuild Project**
+    4. Restart Android Studio
+  </Accordion>
+
+  <Accordion title="App Crashes on Launch">
+    **Solution**:
+    1. Check Logcat for exceptions
+    2. Verify device API level meets minSdk (33+)
+    3. Uninstall and reinstall the app
+    4. Clear app data from device settings
+  </Accordion>
+
+  <Accordion title="Dependency Resolution Errors">
+    **Solution**:
+    1. Check `gradle/libs.versions.toml` for version conflicts
+    2. Update Gradle wrapper: `./gradlew wrapper --gradle-version=8.5`
+    3. Sync project after changes
+    4. Review build output for specific error messages
+  </Accordion>
+</AccordionGroup>
+
+## Development Workflow
+
+### Recommended Workflow
+
+<Steps>
+  <Step title="Create Feature Branch">
+    ```bash
+    git checkout -b feature/new-feature
+    ```
+  </Step>
+  
+  <Step title="Develop with Previews">
+    Use Compose Preview for rapid UI iteration without running the full app
+  </Step>
+  
+  <Step title="Test Locally">
+    Run unit and instrumented tests to verify functionality
+  </Step>
+  
+  <Step title="Code Review">
+    Submit PR and address feedback
+  </Step>
+  
+  <Step title="Merge to Main">
+    After approval, merge and deploy
+  </Step>
+</Steps>
+
+## IDE Configuration
+
+### Recommended Plugins
+
+<CardGroup cols={2}>
+  <Card title="Kotlin" icon="plug">
+    Core Kotlin language support (bundled)
+  </Card>
+  <Card title="Compose Multiplatform" icon="palette">
+    Enhanced Compose tooling
+  </Card>
+  <Card title="ADB Idea" icon="terminal">
+    Quick ADB commands from IDE
+  </Card>
+  <Card title="Material Theme UI" icon="brush">
+    Better IDE theming
+  </Card>
+</CardGroup>
+
+### Editor Settings
+
+Configure Android Studio for optimal development:
+
+1. **Editor → Code Style → Kotlin**
+   - Set indent to 4 spaces
+   - Enable auto-format on save
+
+2. **Editor → Inspections**
+   - Enable Kotlin inspections
+   - Enable Compose-specific warnings
+
+3. **Build, Execution, Deployment → Compiler**
+   - Enable parallel compilation
+   - Increase heap size to 4GB for faster builds
+
+## Performance Optimization
+
+### Build Performance
+
+Optimize build times:
+
+```properties gradle.properties
+org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError
+org.gradle.parallel=true
+org.gradle.caching=true
+android.useAndroidX=true
+kotlin.code.style=official
+```
+
+### Compose Performance
+
+- Use `remember` to avoid unnecessary recompositions
+- Leverage `derivedStateOf` for computed state
+- Profile with Compose Layout Inspector
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Kotlin Docs" icon="book" href="https://kotlinlang.org/docs/home.html">
+    Official Kotlin documentation
+  </Card>
+  <Card title="Jetpack Compose" icon="palette" href="https://developer.android.com/jetpack/compose">
+    Compose guides and references
+  </Card>
+  <Card title="Material 3" icon="material-symbols" href="https://m3.material.io/">
+    Material Design 3 guidelines
+  </Card>
+  <Card title="Android Studio" icon="android" href="https://developer.android.com/studio">
+    IDE documentation
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/technical/architecture">
+    Understand the app architecture
+  </Card>
+  <Card title="UI Components" icon="cubes" href="/technical/ui-components">
+    Learn about reusable components
+  </Card>
+</CardGroup>

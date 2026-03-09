@@ -1,0 +1,507 @@
+---
+title: "Inventory Transfers"
+description: "Transfer inventory between warehouse locations with origin and destination tracking"
+icon: "arrows-left-right"
+---
+
+## Overview
+
+Inventory Transfers allow you to move items between different warehouse locations within EnvaSistema. This operation maintains accurate location-based inventory tracking and ensures proper stock allocation across multiple storage areas or warehouses.
+
+<Note>
+Transfers require both an origin and destination location to be specified before the operation can be completed.
+</Note>
+
+## Purpose
+
+The Transferencia de Inventario feature enables:
+
+- Moving inventory between different warehouse locations
+- Reallocating stock for operational efficiency
+- Balancing inventory across multiple sites
+- Tracking item movement history
+- Maintaining location-based inventory accuracy
+
+---
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Location Rebalancing" icon="scale-balanced">
+    Redistribute inventory to balance stock levels across warehouses
+  </Card>
+  <Card title="Operational Transfers" icon="truck">
+    Move items to locations where they're needed for production or fulfillment
+  </Card>
+  <Card title="Storage Optimization" icon="warehouse">
+    Relocate items to more appropriate storage areas
+  </Card>
+  <Card title="Site Consolidation" icon="boxes-stacked">
+    Transfer inventory when consolidating or reorganizing warehouse spaces
+  </Card>
+</CardGroup>
+
+---
+
+## Available Locations
+
+EnvaSistema supports transfers between the following warehouse locations:
+
+<CardGroup cols={2}>
+  <Card title="CUAVES" icon="location-dot">
+    Primary warehouse location
+  </Card>
+  <Card title="MUEBLE" icon="location-dot">
+    Furniture storage area
+  </Card>
+  <Card title="JOSE GALVEZ" icon="location-dot">
+    José Gálvez facility
+  </Card>
+  <Card title="ENVA" icon="location-dot">
+    ENVA main location
+  </Card>
+</CardGroup>
+
+<Accordion title="Location Configuration">
+  The locations are defined in TransferenciaInventarioScreen.kt:29:
+  ```kotlin
+  val locations = listOf("CUAVES", "MUEBLE", "JOSE GALVEZ", "ENVA")
+  ```
+  These locations appear in dropdown menus for origin and destination selection.
+</Accordion>
+
+---
+
+## Transfer Workflow
+
+<Steps>
+  <Step title="Navigate to Transfers">
+    From the main menu, tap **Movimientos** to go directly to the Transferencia de Inventario screen. 
+    
+    <Note>
+    Unlike Ingresos and Salidas which have sub-menus, Movimientos goes directly to the transfer screen.
+    </Note>
+  </Step>
+  
+  <Step title="Select Origin Location">
+    In the white "UBICACIONES" card:
+    1. Tap the **Origen** dropdown (marked with a green location icon)
+    2. Select the location where items currently reside
+    3. The dropdown displays "— Origen —" until a selection is made
+    
+    <Warning>
+    The origin field is required (marked with red asterisk *)
+    </Warning>
+  </Step>
+  
+  <Step title="Select Destination Location">
+    In the same card:
+    1. Tap the **Destino** dropdown (marked with a blue location icon)
+    2. Choose where items will be transferred to
+    3. The dropdown shows "— Destino —" as placeholder text
+    
+    <Warning>
+    - The destination field is required (marked with red asterisk *)
+    - Origin and destination **must be different** locations
+    </Warning>
+  </Step>
+  
+  <Step title="Scan Items to Transfer">
+    Press the **lateral button** to scan QR codes of items being transferred. The info banner reads: "Escanee los códigos QR de las piezas o mangas a transferir"
+    
+    The counter label shows: **"Ítems a transferir"** (Items to transfer)
+  </Step>
+  
+  <Step title="Review Transfer Details">
+    Before confirming, verify:
+    - Origin location is correct
+    - Destination location is correct  
+    - Origin ≠ Destination
+    - Scanned item count is accurate
+    - A transfer icon (⇄) appears between the location fields
+  </Step>
+  
+  <Step title="Confirm Transfer">
+    Tap the **"Confirmar Transferencia"** button (with SyncAlt icon) to execute the transfer. 
+    
+    The button is only enabled when:
+    - At least one item is scanned
+    - Origin is selected
+    - Destination is selected
+    - Origin ≠ Destination
+  </Step>
+</Steps>
+
+---
+
+## Screen Layout
+
+The Transferencia de Inventario screen (TransferenciaInventarioScreen.kt:23-204) features a unique dual-location selector layout.
+
+### Header Section
+
+- **Title**: "Transferencia de Inventario"
+- **Subtitle**: "MOVIMIENTOS INTERNOS" (Internal Movements)
+- **Color**: Standard blue (`Color(0xFF0061A6)`)
+
+### Location Selector Card
+
+<Tabs>
+  <Tab title="Layout Structure">
+    A white elevated card contains:
+    
+    **Card Header**
+    - "UBICACIONES" label in gray
+    - 12sp font size with bold weight
+    - 0.5sp letter spacing
+    
+    **Two-Column Layout**
+    - Left column: Origin (Origen)
+    - Right column: Destination (Destino)
+    - Transfer icon (⇄) centered between columns
+    - Each column has equal width (`modifier = Modifier.weight(1f)`)
+  </Tab>
+  
+  <Tab title="Origin Selector">
+    **Label**
+    - Green location pin icon (`Color(0xFF4CAF50)`)
+    - "Origen" text with red asterisk
+    - 13sp font size
+    
+    **Dropdown Field**
+    - Outlined card with rounded corners (12dp)
+    - Placeholder: "— Origen —" in gray
+    - Selected value in black
+    - Down arrow icon on the right
+    - Opens dropdown menu on tap
+  </Tab>
+  
+  <Tab title="Destination Selector">
+    **Label**
+    - Blue location pin icon (`Color(0xFF0061A6)`)
+    - "Destino" text with red asterisk  
+    - 13sp font size
+    
+    **Dropdown Field**
+    - Same styling as Origin
+    - Placeholder: "— Destino —" in gray
+    - Selected value in black
+    - Down arrow icon
+    - Separate dropdown menu
+  </Tab>
+</Tabs>
+
+### Dropdown Menu Behavior
+
+<Accordion title="Implementation Details">
+  Each location field uses Material 3 `DropdownMenu` components:
+  
+  ```kotlin
+  var showOrigenMenu by remember { mutableStateOf(false) }
+  var showDestinoMenu by remember { mutableStateOf(false) }
+  ```
+  
+  The dropdowns:
+  - Show all four locations as options
+  - Close automatically after selection
+  - Update the respective field value
+  - Trigger validation for the save button
+  
+  The fields use `OutlinedCard` with `clickable` modifier to trigger dropdown display:
+  ```kotlin
+  .clickable { showOrigenMenu = true }
+  ```
+</Accordion>
+
+### Scanning Interface
+
+Below the location card, the standard scanning interface includes:
+
+- Info banner: "Escanee los códigos QR de las piezas o mangas a transferir"
+- Large scan area with QR code icon
+- Counter badge with "Ítems a transferir" label
+- Empty state message when no items scanned
+
+### Action Button
+
+**"Confirmar Transferencia"** button features:
+
+- SyncAlt icon (⇄ arrows)
+- 56dp height
+- Full width with 16dp rounded corners
+- Conditional enabling based on validation logic
+
+---
+
+## Validation Rules
+
+The transfer operation enforces several validation rules to ensure data integrity:
+
+<AccordionGroup>
+  <Accordion title="Required Fields">
+    All three components must be completed:
+    1. **Origin location** must be selected
+    2. **Destination location** must be selected  
+    3. **At least one item** must be scanned
+    
+    The save button remains disabled (gray) until all requirements are met.
+  </Accordion>
+  
+  <Accordion title="Location Logic">
+    **Origin ≠ Destination Rule**
+    
+    The system prevents transferring items to the same location:
+    ```kotlin
+    isSaveButtonEnabled = { count ->
+      count > 0 && origen.isNotEmpty() && destino.isNotEmpty() && origen != destino
+    }
+    ```
+    
+    This validation ensures logical transfers and prevents database inconsistencies.
+  </Accordion>
+  
+  <Accordion title="Button State">
+    The confirmation button dynamically changes based on validation:
+    
+    **Disabled State (Gray)**
+    - No items scanned, OR
+    - Origin not selected, OR
+    - Destination not selected, OR
+    - Origin equals Destination
+    
+    **Enabled State (Blue)**
+    - All validation rules pass
+    - Button becomes tappable
+    - Background changes to primary blue
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Visual Design Elements
+
+### Color Coding
+
+The transfer screen uses strategic color coding for clarity:
+
+| Element | Color | Hex Code | Purpose |
+|---------|-------|----------|----------|
+| Origin Icon | Green | `#4CAF50` | Indicates source location |
+| Destination Icon | Blue | `#0061A6` | Indicates target location |
+| Transfer Icon | Gray | `#BDBDBD` | Neutral connector between locations |
+| Required Asterisk | Red | `#FF0000` | Highlights mandatory fields |
+| Enabled Button | Blue | `#0061A6` | Ready for action |
+| Disabled Button | Gray | `#B0BEC5` | Not ready for action |
+
+### Icon Usage
+
+- **LocationOn Icon**: Used for both origin and destination
+- **SyncAlt Icon**: Bidirectional arrows for transfer action and button
+- **ArrowDropDown Icon**: Indicates dropdown functionality
+- **QrCodeScanner Icon**: Standard scanning interface
+
+### Spacing and Layout
+
+<Accordion title="Design Specifications">
+  Key measurements from the implementation:
+  
+  - Card padding: 16dp
+  - Section spacing: 16dp vertical gaps
+  - Icon size: 16dp for location pins, 20dp for transfer icon
+  - Icon spacing: 4dp between icon and text
+  - Dropdown padding: 12dp inside cards
+  - Button height: 56dp
+  - Border radius: 12dp for fields, 16dp for cards and buttons
+</Accordion>
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Planning Transfers">
+    **Before starting:**
+    - Verify destination has physical space for items
+    - Confirm items are at the origin location
+    - Coordinate with staff at destination location
+    - Check if items need special handling during transfer
+    
+    **During selection:**
+    - Select origin first, then destination
+    - Double-check location names before confirming
+    - Ensure you have the correct location identifiers
+  </Accordion>
+  
+  <Accordion title="Scanning Items">
+    **For accuracy:**
+    - Scan all items being physically transferred
+    - Verify each scan registers (watch the counter)
+    - Match digital count with physical item count
+    - Group related items together when possible
+    
+    **Quality checks:**
+    - Ensure QR codes are readable
+    - Confirm items belong to the origin location
+    - Verify items are authorized for transfer
+  </Accordion>
+  
+  <Accordion title="Completing Transfers">
+    **Before confirming:**
+    - Review origin and destination selections
+    - Verify item count is correct
+    - Ensure the transfer icon appears between locations
+    - Confirm the button is enabled (blue)
+    
+    **After confirmation:**
+    - Physically move items to destination
+    - Update any external documentation
+    - Verify items appear in destination inventory
+    - File any required paperwork
+  </Accordion>
+  
+  <Accordion title="Error Prevention">
+    **Common mistakes to avoid:**
+    - Don't select the same location for origin and destination
+    - Don't start scanning before selecting locations
+    - Don't transfer items not physically present at origin
+    - Don't confirm without verifying the item count
+    
+    **If you make an error:**
+    - Use the back button to cancel and restart
+    - Reselect locations if needed
+    - The system prevents same-location transfers automatically
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Technical Implementation
+
+### State Management
+
+<Accordion title="Reactive State">
+  The screen uses Compose state management:
+  
+  ```kotlin
+  var origen by remember { mutableStateOf("") }
+  var destino by remember { mutableStateOf("") }
+  var showOrigenMenu by remember { mutableStateOf(false) }
+  var showDestinoMenu by remember { mutableStateOf(false) }
+  ```
+  
+  State changes trigger UI recomposition, enabling reactive validation and button state updates.
+</Accordion>
+
+### Reusable Component
+
+The transfer screen extends `ScanningLayout` with custom:
+
+- `isSaveButtonEnabled` lambda for complex validation
+- `extraContent` parameter for the location selector card
+- Custom counter label: "Ítems a transferir"
+- Custom button text and icon
+
+### Validation Lambda
+
+<Accordion title="Button Enable Logic">
+  ```kotlin
+  isSaveButtonEnabled = { count ->
+      count > 0 && 
+      origen.isNotEmpty() && 
+      destino.isNotEmpty() && 
+      origen != destino
+  }
+  ```
+  
+  This lambda:
+  - Receives the current scan count
+  - Evaluates all validation rules
+  - Returns boolean for button state
+  - Runs on every state change
+</Accordion>
+
+---
+
+## Navigation Context
+
+<Note>
+**Direct Access**: Unlike Ingresos and Salidas which have sub-menus, the Movimientos option in the main menu navigates directly to the Transferencia de Inventario screen.
+
+From AppNavigation.kt:96-98:
+```kotlin
+composable(Screen.Movimientos.route) {
+    TransferenciaInventarioScreen(onBackClick = { navController.popBackStack() })
+}
+```
+</Note>
+
+### Navigation Flow
+
+1. **Home Screen** → Tap "Movimientos" button
+2. **Transfer Screen** → Appears immediately (no sub-menu)
+3. **Back Button** → Returns to home screen
+
+The header displays:
+- Title: "Transferencia de Inventario"  
+- Subtitle: "MOVIMIENTOS INTERNOS"
+- Back arrow in top-left
+
+---
+
+## Example Scenarios
+
+<Tabs>
+  <Tab title="Rebalancing Stock">
+    **Scenario**: CUAVES has excess inventory that's needed at MUEBLE
+    
+    **Steps**:
+    1. Select **Origen**: CUAVES
+    2. Select **Destino**: MUEBLE
+    3. Scan 15 items at CUAVES location
+    4. Confirm transfer shows "15 Ítems a transferir"
+    5. Tap "Confirmar Transferencia"
+    6. Physically move the 15 items to MUEBLE
+    7. Inventory updates automatically
+  </Tab>
+  
+  <Tab title="Production Support">
+    **Scenario**: JOSE GALVEZ needs materials from ENVA for production
+    
+    **Steps**:
+    1. Select **Origen**: ENVA
+    2. Select **Destino**: JOSE GALVEZ
+    3. Scan production materials at ENVA
+    4. Review counter to verify all items scanned
+    5. Execute transfer
+    6. Materials become available at JOSE GALVEZ for production
+  </Tab>
+  
+  <Tab title="Storage Reorganization">
+    **Scenario**: Moving furniture items to dedicated MUEBLE location
+    
+    **Steps**:
+    1. Identify furniture currently at CUAVES
+    2. Select **Origen**: CUAVES
+    3. Select **Destino**: MUEBLE  
+    4. Scan all furniture items
+    5. Confirm transfer
+    6. Relocate items to MUEBLE storage area
+    7. System tracks new location
+  </Tab>
+</Tabs>
+
+---
+
+## Related Operations
+
+<CardGroup cols={3}>
+  <Card title="Inbound Operations" icon="arrow-down-to-bracket" href="/features/inbound-operations">
+    Add inventory to locations
+  </Card>
+  <Card title="Outbound Operations" icon="arrow-up-from-bracket" href="/features/outbound-operations">
+    Remove inventory from locations
+  </Card>
+  <Card title="Transformations" icon="screwdriver-wrench" href="/features/transformations">
+    Change inventory composition
+  </Card>
+</CardGroup>

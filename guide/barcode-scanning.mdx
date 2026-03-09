@@ -1,0 +1,361 @@
+---
+title: 'Barcode Scanning'
+description: 'Master barcode scanning techniques and workflows in EnvaSistema'
+icon: 'barcode'
+---
+
+## Overview
+
+Barcode scanning is the primary input method in EnvaSistema. The app is designed to work with warehouse handheld terminals equipped with physical scanner buttons, enabling fast and accurate inventory operations.
+
+## Scanning Interface
+
+Most inventory operations use the `ScanningLayout` component, which provides a consistent scanning experience across all operation types.
+
+### Interface Elements
+
+<Steps>
+  <Step title="Operation Header">
+    Shows the operation title and subtitle with color-coding:
+    - **Blue** (`#0061A6`): Standard operations (receipts, sales)
+    - **Red** (`#B71C1C`): Destructive operations (waste/merma)
+    - **Gray** (`#455A64`): Transformations
+  </Step>
+  
+  <Step title="Information Card">
+    Displays operation-specific instructions with:
+    - Colored left accent strip
+    - Info/radar icon
+    - Clear instruction text
+  </Step>
+  
+  <Step title="Scan Area">
+    Central scanning zone with QR code icon and instructions
+  </Step>
+  
+  <Step title="Scan Counter">
+    Shows total number of codes scanned with a visual badge
+  </Step>
+  
+  <Step title="Save Button">
+    Action button to complete and save the operation
+  </Step>
+</Steps>
+
+## How to Scan Barcodes
+
+<Steps>
+  <Step title="Position Your Terminal">
+    Hold the terminal comfortably with one hand, ensuring the scanner window is unobstructed.
+  </Step>
+  
+  <Step title="Aim at Barcode">
+    Point the scanner at the barcode from 6-12 inches away (15-30 cm). The barcode should be clearly visible.
+  </Step>
+  
+  <Step title="Press Scanner Button">
+    Press the physical scanner button on the side of the terminal. You'll see:
+    - A red laser beam or LED light
+    - An audible beep when successful
+    - The scan counter increment
+  </Step>
+  
+  <Step title="Verify the Count">
+    Check that the scan counter increased. If not, scan the barcode again.
+  </Step>
+</Steps>
+
+<Tip>
+  **For Development/Testing**: The scanning area is tappable in development builds. Tap the scan area to simulate a barcode scan and increment the counter.
+</Tip>
+
+## Scanning Layout Implementation
+
+The scanning interface is implemented in `ScanningLayout.kt:28-196`:
+
+```kotlin
+fun ScanningLayout(
+    title: String,
+    subtitle: String,
+    infoText: String,
+    onBackClick: () -> Unit,
+    onSaveClick: (Int) -> Unit,
+    counterLabel: String = "Códigos escaneados",
+    saveButtonText: String = "Guardar Ingreso"
+)
+```
+
+### Scan Counter
+
+The scan count is tracked using Compose state (`ScanningLayout.kt:44`):
+
+```kotlin
+var scannCount by remember { mutableIntStateOf(0) }
+```
+
+The counter displays in a circular badge (`ScanningLayout.kt:147-155`):
+
+```kotlin
+Surface(
+    color = primaryColor,
+    shape = CircleShape,
+    modifier = Modifier.size(32.dp)
+) {
+    Box(contentAlignment = Alignment.Center) {
+        Text(text = scannCount.toString(), color = Color.White)
+    }
+}
+```
+
+## Scan Area Design
+
+The scan area (`ScanningLayout.kt:103-138`) provides visual feedback:
+
+<CodeGroup>
+```kotlin Scan Area (Development)
+Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(200.dp)
+        .clickable { scannCount++ }, // Development: tap to scan
+    contentAlignment = Alignment.Center
+) {
+    Icon(imageVector = Icons.Default.QrCodeScanner)
+    Text("Presione el botón lateral del terminal para escanear")
+    Text("(Toque aquí para simular escaneo)") // Dev only
+}
+```
+</CodeGroup>
+
+<Info>
+  The scan area shows a QR code scanner icon and clear instructions in Spanish, making it easy for new users to understand the scanning process.
+</Info>
+
+## Operation-Specific Scanning
+
+Different operations use customized scanning parameters:
+
+### Standard Receipt Operations
+
+```kotlin
+ScanningLayout(
+    title = "Producción Nueva",
+    subtitle = "Ingreso desde producción",
+    infoText = "Escanee los códigos de los productos nuevos",
+    counterLabel = "Códigos escaneados",
+    saveButtonText = "Guardar Ingreso",
+    primaryColor = Color(0xFF0061A6)
+)
+```
+
+### Destructive Operations (Waste/Merma)
+
+```kotlin
+ScanningLayout(
+    title = "Merma (Molino)",
+    subtitle = "Destrucción de inventario",
+    infoText = "ADVERTENCIA: Esta operación es IRREVERSIBLE",
+    counterLabel = "Códigos para destruir",
+    saveButtonText = "Confirmar Destrucción",
+    primaryColor = Color(0xFFB71C1C), // Red color
+    infoIcon = Icons.Default.Warning
+)
+```
+
+### Package Operations
+
+```kotlin
+ScanningLayout(
+    title = "Armar Paquetes",
+    subtitle = "Agrupación de piezas",
+    infoText = "Escanee todas las piezas que conforman el paquete",
+    counterLabel = "Piezas escaneadas",
+    saveButtonText = "Crear Paquete",
+    saveButtonIcon = Icons.Default.Inventory
+)
+```
+
+## Save Button Behavior
+
+The save button has intelligent enable/disable logic (`ScanningLayout.kt:45`):
+
+```kotlin
+val buttonEnabled = isSaveButtonEnabled?.invoke(scannCount) ?: (scannCount > 0)
+```
+
+<Steps>
+  <Step title="Default Behavior">
+    Button is **disabled** (gray) when scan count is 0
+  </Step>
+  
+  <Step title="Enabled State">
+    Button becomes **active** (colored) when count > 0
+  </Step>
+  
+  <Step title="Custom Validation">
+    Some operations may require specific count thresholds or additional validation
+  </Step>
+</Steps>
+
+<Warning>
+  The save button is styled differently when disabled (`ScanningLayout.kt:179-193`):
+  ```kotlin
+  colors = ButtonDefaults.buttonColors(
+      containerColor = if (buttonEnabled) primaryColor else Color(0xFFB0BEC5),
+      contentColor = Color.White
+  )
+  ```
+  A gray button means you cannot save yet—scan at least one item first.
+</Warning>
+
+## Information Cards
+
+Each scanning screen includes a color-coded information card (`ScanningLayout.kt:72-98`):
+
+<CardGroup cols={2}>
+  <Card title="Blue Cards" icon="circle-info">
+    Standard operations with helpful tips
+  </Card>
+  <Card title="Red Cards" icon="triangle-exclamation">
+    Critical warnings for destructive operations
+  </Card>
+  <Card title="Green Cards" icon="circle-check">
+    Success confirmations or positive actions
+  </Card>
+  <Card title="Gray Cards" icon="circle">
+    Neutral information or transformation operations
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<Tip>
+  **Scan at a Steady Pace**: Wait for the beep before moving to the next item. Scanning too quickly may cause missed scans.
+</Tip>
+
+<Tip>
+  **Check the Counter**: Always verify the counter matches the number of items you've scanned before saving.
+</Tip>
+
+<Tip>
+  **Clean Barcodes**: Dirty or damaged barcodes may not scan properly. Wipe them clean if needed.
+</Tip>
+
+<Tip>
+  **Proper Lighting**: Ensure adequate lighting when scanning. Shadows or glare can interfere with the scanner.
+</Tip>
+
+<Warning>
+  **Double Scanning**: If you accidentally scan an item twice, note this and inform your supervisor. The app currently doesn't prevent duplicate scans within an operation.
+</Warning>
+
+## Extra Content Support
+
+Some operations include additional input fields before the scanning area (`ScanningLayout.kt:66-70`):
+
+```kotlin
+extraContent?.invoke(this)
+```
+
+For example, **Devolución de Mercadería** might require:
+- Invoice number input field
+- Customer name/ID field
+- Return reason selection
+
+These fields appear above the information card when needed.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Scanner doesn't beep or scan">
+    **Possible causes:**
+    - Low battery on the terminal
+    - Scanner hardware malfunction
+    - Barcode format not supported
+    
+    **Solutions:**
+    - Charge the terminal
+    - Restart the device
+    - Try a different barcode
+    - Contact IT support
+  </Accordion>
+  
+  <Accordion title="Counter doesn't increment">
+    **Possible causes:**
+    - Scan was unsuccessful (no beep)
+    - App interface frozen
+    
+    **Solutions:**
+    - Listen for the beep confirmation
+    - Scan the item again
+    - If frozen, return to home screen and restart the operation
+  </Accordion>
+  
+  <Accordion title="Save button stays gray">
+    **Cause:** No items have been scanned yet (count = 0)
+    
+    **Solution:** Scan at least one barcode before attempting to save.
+  </Accordion>
+  
+  <Accordion title="Scanned wrong items">
+    **Solution:** Currently, you must:
+    1. Use the back button to cancel the operation
+    2. Start a new operation
+    3. Scan the correct items
+    
+    Note: There's no "undo" feature for individual scans yet.
+  </Accordion>
+</AccordionGroup>
+
+## Scanning Workflow Example
+
+Here's a typical workflow for **Producción Nueva** (New Production Receipt):
+
+<Steps>
+  <Step title="Navigate to Operation">
+    Home → INGRESOS → Producción Nueva
+  </Step>
+  
+  <Step title="Read Information Card">
+    "Escanee los códigos de los productos nuevos"
+  </Step>
+  
+  <Step title="Scan Items">
+    - Point scanner at first barcode
+    - Press scanner button
+    - Wait for beep
+    - Verify counter shows "1"
+    - Repeat for all items
+  </Step>
+  
+  <Step title="Verify Count">
+    Check "Códigos escaneados" counter matches expected quantity
+  </Step>
+  
+  <Step title="Save Operation">
+    - Ensure save button is blue (enabled)
+    - Tap "Guardar Ingreso"
+    - Wait for confirmation
+  </Step>
+</Steps>
+
+## Color Coding Reference
+
+| Operation Type | Primary Color | Hex Code | Usage |
+|----------------|---------------|----------|-------|
+| Standard (Ingresos/Salidas) | Blue | `#0061A6` | Most operations |
+| Destructive (Merma) | Red | `#B71C1C` | Waste/destruction |
+| Transformations | Gray | `#455A64` | Disassembly |
+| Information Background | Light Blue | `#E1F5FE` | Info cards |
+| Warning Background | Light Red | `#FFEBEE` | Warning cards |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Navigation" icon="compass" href="/guide/navigation">
+    Learn about app navigation and menu structure
+  </Card>
+  <Card title="Shift Management" icon="clock" href="/guide/shift-management">
+    Understand shift information and user sessions
+  </Card>
+</CardGroup>

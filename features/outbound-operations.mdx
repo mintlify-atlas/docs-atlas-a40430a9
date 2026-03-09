@@ -1,0 +1,398 @@
+---
+title: "Outbound Operations"
+description: "Manage inventory outbound operations including sales, package assembly, waste, and donations"
+icon: "arrow-up-from-bracket"
+---
+
+## Overview
+
+Outbound Operations handle all inventory exits from the warehouse. EnvaSistema supports various types of outbound transactions, from standard sales to special cases like waste disposal and donations. Each operation is designed to maintain accurate inventory tracking while accommodating different business scenarios.
+
+<Note>
+All outbound operations use the same QR code scanning mechanism as inbound operations, ensuring consistency across the system.
+</Note>
+
+## Available Operations
+
+<CardGroup cols={2}>
+  <Card title="Venta de PT" icon="shopping-cart" iconType="solid">
+    Register finished product sales and shipments
+  </Card>
+  <Card title="Armar Paquetes" icon="box" iconType="solid">
+    Group pieces into packages for dispatch
+  </Card>
+  <Card title="Merma (Molino)" icon="triangle-exclamation" iconType="solid" color="#D32F2F">
+    Permanent inventory destruction - irreversible action
+  </Card>
+  <Card title="Donaciones" icon="heart" iconType="regular">
+    Process donations to external cost centers
+  </Card>
+</CardGroup>
+
+<Warning>
+The Merma (Molino) operation permanently destroys inventory and cannot be reversed. It requires supervisor confirmation.
+</Warning>
+
+---
+
+## Venta de PT
+
+### Purpose
+Register the outbound movement of finished products (Producto Terminado) when sold to customers.
+
+### Use Cases
+- Recording product sales and shipments
+- Processing customer orders for dispatch
+- Tracking finished goods leaving the warehouse
+- Updating inventory after successful sales
+
+### Workflow
+
+<Steps>
+  <Step title="Navigate to Sales Screen">
+    From the main menu, tap **Salidas** → **Venta de PT**
+  </Step>
+  
+  <Step title="Scan Products">
+    Press the **lateral button** to scan QR codes of products being sold. The info banner displays: "Presione botón lateral para escanear código QR del producto a vender"
+  </Step>
+  
+  <Step title="Monitor Scanned Items">
+    Watch the counter badge showing the number of products scanned. The system provides real-time feedback on each successful scan.
+  </Step>
+  
+  <Step title="Register Exit">
+    Tap the **"Registrar Salida"** button (with Output icon) to complete the sale transaction
+  </Step>
+</Steps>
+
+### Screen Reference
+
+Venta de PT (VentaPTScreen.kt:10-28) uses the standard `ScanningLayout` component with:
+- Title: "Venta de PT"
+- Subtitle: "SALIDAS"
+- Custom button text: "Registrar Salida" with Output icon
+- Standard blue primary color scheme
+
+---
+
+## Armar Paquetes
+
+### Purpose
+Group individual pieces together into packages for efficient dispatch and shipping operations.
+
+### Use Cases
+- Creating dispatch packages from individual items
+- Organizing pieces for bulk shipments
+- Preparing consolidated orders for customers
+- Optimizing warehouse space and logistics
+
+### Workflow
+
+<Steps>
+  <Step title="Open Package Assembly">
+    Select **Salidas** → **Armar Paquetes**
+  </Step>
+  
+  <Step title="Scan Package Contents">
+    Use the lateral button to scan QR codes of all pieces that will comprise the package. Instruction text: "Presione botón lateral para escanear las piezas que conformarán el paquete"
+  </Step>
+  
+  <Step title="Review Package Items">
+    Verify the scanned item count matches the intended package contents
+  </Step>
+  
+  <Step title="Complete Assembly">
+    Press **"Registrar Salida"** to finalize the package and record the outbound transaction
+  </Step>
+</Steps>
+
+### Screen Reference
+
+Armar Paquetes (ArmarPaquetesScreen.kt:10-28) follows the same pattern as Venta de PT, ensuring consistent user experience across outbound operations.
+
+<Accordion title="Package Assembly Logic">
+  When pieces are scanned and assembled:
+  1. Individual piece QR codes are recorded
+  2. A package entity is created grouping these pieces
+  3. Pieces transition from individual inventory to package status
+  4. The system tracks which pieces comprise each package
+</Accordion>
+
+---
+
+## Merma (Molino)
+
+### Purpose
+Permanently remove defective, damaged, or expired inventory through destruction. This is an **irreversible operation** typically used for items sent to grinding (molino) or disposal.
+
+<Warning>
+This operation **PERMANENTLY DESTROYS** inventory. Once executed, items cannot be recovered. Always verify selections before confirming.
+</Warning>
+
+### Use Cases
+- Disposing of defective products that cannot be sold
+- Processing damaged inventory items
+- Removing expired or unsuitable merchandise
+- Managing quality control rejections
+
+### Workflow
+
+<Steps>
+  <Step title="Access Waste Screen">
+    Navigate to **Salidas** → **Merma (Molino)**. Note the red warning indicators throughout the interface.
+  </Step>
+  
+  <Step title="Read Warning Message">
+    Review the prominent red alert banner on the Salidas menu: "La operación de Merma es irreversible. Requiere confirmación del supervisor."
+  </Step>
+  
+  <Step title="Scan Items for Destruction">
+    Carefully scan only the items marked for destruction using the lateral button. The info banner states: "ATENCIÓN: Esta operación dará de baja permanentemente el inventario seleccionado."
+  </Step>
+  
+  <Step title="Verify Selection">
+    Double-check the counter showing "Ítems a destruir" (Items to destroy). Ensure only intended items were scanned.
+  </Step>
+  
+  <Step title="Obtain Supervisor Approval">
+    Get supervisor confirmation before proceeding, as required by the warning message.
+  </Step>
+  
+  <Step title="Execute Destruction">
+    Press the red **"Registrar Merma"** button (with warning icon) to permanently remove items from inventory
+  </Step>
+</Steps>
+
+### Screen Reference
+
+The Merma screen (MermaMolinoScreen.kt:12-35) implements special visual warnings:
+
+- **Primary Color**: Deep red (`Color(0xFFB71C1C)`) instead of standard blue
+- **Info Card Background**: Light red (`Color(0xFFFFEBEE)`)
+- **Warning Icon**: Yellow warning triangle (`Color(0xFFFBC02D)`)
+- **Button Icon**: Report Problem icon instead of standard Save icon
+- **Counter Label**: "Ítems a destruir" (Items to destroy)
+- **Button Text**: "Registrar Merma" (Register Waste)
+
+<Accordion title="Safety Features">
+  Multiple safety mechanisms are built into the Merma operation:
+  
+  - **Visual Warnings**: Red color scheme throughout
+  - **Explicit Text**: "ATENCIÓN" and "permanentemente" emphasized
+  - **Menu-Level Alert**: Warning banner on the Salidas menu screen
+  - **Supervisor Requirement**: Documented need for approval
+  - **Distinct UI**: Looks completely different from normal operations
+</Accordion>
+
+### Salidas Menu Warning
+
+On the Salidas menu screen (SalidasScreen.kt:104-129), a prominent warning card appears at the bottom:
+
+- Light red background (`Color(0xFFFFEBEE)`)
+- Warning icon in red
+- Bold red text: "La operación de Merma es irreversible. Requiere confirmación del supervisor."
+- The Merma menu card itself has red accents and a warning icon
+
+---
+
+## Donaciones
+
+### Purpose
+Register outbound movements of products being donated to external organizations or transferred to external cost centers.
+
+### Use Cases
+- Processing charitable donations
+- Transferring inventory to partner organizations
+- Recording corporate social responsibility distributions
+- Managing inventory allocations to external cost centers
+
+### Required Information
+- **Centro de Costo / Motivo** (Cost Center / Reason): Destination or purpose of donation
+- QR codes of items being donated
+
+### Workflow
+
+<Steps>
+  <Step title="Open Donations Screen">
+    Select **Salidas** → **Donaciones**
+  </Step>
+  
+  <Step title="Select Destination">
+    In the white card labeled "DESTINO DE LA DONACIÓN", tap the dropdown field:
+    - Field label: "Centro de Costo / Motivo" (marked with red asterisk *)
+    - Opens a selection menu
+    - Choose the appropriate cost center or organization
+    - Placeholder text: "— Seleccione un destino —"
+  </Step>
+  
+  <Step title="Scan Donated Items">
+    Use the lateral button to scan QR codes of products being donated. Info text: "Presione botón lateral para escanear los productos a donar"
+  </Step>
+  
+  <Step title="Review Donation">
+    Verify:
+    - Destination is correctly selected
+    - Counter shows correct number of "Productos a donar"
+    - All intended items have been scanned
+  </Step>
+  
+  <Step title="Complete Donation">
+    Press **"Registrar Salida"** to finalize the donation transaction
+  </Step>
+</Steps>
+
+### Screen Reference
+
+Donaciones (DonacionesScreen.kt:22-116) extends the scanning layout with a custom destination selector:
+
+- White card with elevation and borders
+- "DESTINO DE LA DONACIÓN" header in gray
+- Business icon (`Icons.Default.Business`) in blue
+- Required field indicator (red asterisk)
+- Dropdown-style selector with arrow icon
+- Placeholder text when no selection made
+- Counter label: "Productos a donar" (Products to donate)
+
+<Accordion title="Dropdown Implementation">
+  The destination selector is implemented as an `OutlinedCard` with:
+  ```kotlin
+  OutlinedCard(
+    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+    shape = RoundedCornerShape(12.dp),
+    colors = CardDefaults.outlinedCardColors(containerColor = Color.Transparent),
+    border = ...
+  )
+  ```
+  It displays either placeholder text in gray or the selected destination in black, with a dropdown arrow icon on the right.
+</Accordion>
+
+---
+
+## Common Features
+
+### Standard Scanning Interface
+
+All outbound operations (except Merma's red theme) share:
+
+<Tabs>
+  <Tab title="Layout Components">
+    - Secondary header with title and "SALIDAS" subtitle
+    - Blue info banner with scanning instructions
+    - Large scan area with QR code icon
+    - Real-time item counter
+    - Action button at bottom ("Registrar Salida" or "Registrar Merma")
+  </Tab>
+  
+  <Tab title="Button Behavior">
+    - Disabled (gray) when no items scanned
+    - Enabled (blue or red) when items are ready
+    - Output icon for standard operations
+    - Warning icon for Merma operation
+    - Consistent 56dp height with rounded corners
+  </Tab>
+  
+  <Tab title="Visual Feedback">
+    - Circular badge shows scan count
+    - Empty state message when count is zero
+    - Color-coded by operation type
+    - Material 3 design language throughout
+  </Tab>
+</Tabs>
+
+### Navigation Structure
+
+The Salidas menu (SalidasScreen.kt:27-141) provides organized access:
+
+1. **Menu Cards**: Each operation has a card with:
+   - Title and descriptive subtitle
+   - Relevant icon
+   - Color coding (red for Merma, blue for others)
+   
+2. **Operation Types Section**: 
+   - Header: "TIPO DE OPERACIÓN"
+   - Four vertically stacked menu cards
+   - Consistent spacing (16dp between cards)
+
+3. **Warning Banner**: 
+   - Appears below all menu cards
+   - Specific to Merma operation
+   - Red color scheme with warning icon
+
+---
+
+## Outbound Operation Comparison
+
+| Operation | Purpose | Button Text | Color | Special Requirements |
+|-----------|---------|-------------|-------|---------------------|
+| **Venta de PT** | Sales exit | Registrar Salida | Blue | None |
+| **Armar Paquetes** | Package assembly | Registrar Salida | Blue | None |
+| **Merma (Molino)** | Destruction | Registrar Merma | Red | Supervisor approval |
+| **Donaciones** | Donations | Registrar Salida | Blue | Destination selection |
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Sales Operations">
+    - Verify order details before scanning products
+    - Ensure scanned items match shipping documentation
+    - Complete scanning before customer pickup time
+    - Double-check product codes for accuracy
+  </Accordion>
+  
+  <Accordion title="Package Assembly">
+    - Group related items for efficient packing
+    - Verify package contents before registering
+    - Label physical packages clearly after digital assembly
+    - Match digital records with physical package tags
+  </Accordion>
+  
+  <Accordion title="Waste Management">
+    - **Always** obtain supervisor approval first
+    - Photograph defective items before destruction (if policy requires)
+    - Document reason for waste in any required external systems
+    - Triple-check scanned items before executing
+    - Never rush through the Merma process
+  </Accordion>
+  
+  <Accordion title="Donation Processing">
+    - Select destination **before** scanning items
+    - Maintain documentation for tax/accounting purposes
+    - Coordinate with receiving organization
+    - Verify donation authorization
+  </Accordion>
+</AccordionGroup>
+
+## Safety and Validation
+
+<Warning>
+**Critical Reminders:**
+- Merma operations are **PERMANENT** and **IRREVERSIBLE**
+- Always verify scan counts before saving
+- Required fields (marked with *) must be completed
+- Supervisor approval is mandatory for Merma
+</Warning>
+
+<Note>
+The system uses visual cues to distinguish operation types:
+- **Blue** = Standard operations (safe to execute)
+- **Red** = Destructive operations (requires caution)
+</Note>
+
+---
+
+## Related Operations
+
+<CardGroup cols={3}>
+  <Card title="Inbound Operations" icon="arrow-down-to-bracket" href="/features/inbound-operations">
+    Manage inventory entries and returns
+  </Card>
+  <Card title="Inventory Transfers" icon="arrows-left-right" href="/features/inventory-transfers">
+    Move items between warehouse locations
+  </Card>
+  <Card title="Transformations" icon="screwdriver-wrench" href="/features/transformations">
+    Disassemble packages back to pieces
+  </Card>
+</CardGroup>

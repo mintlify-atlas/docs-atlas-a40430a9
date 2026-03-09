@@ -1,0 +1,296 @@
+---
+title: "Inbound Operations"
+description: "Manage inventory inbound operations including production, returns, and assembled items"
+icon: "arrow-down-to-bracket"
+---
+
+## Overview
+
+Inbound Operations in EnvaSistema handle all inventory incoming flows into the warehouse. The system supports multiple types of inbound transactions, each designed for specific business scenarios in the packaging and assembly operations.
+
+<Note>
+All inbound operations use QR code scanning via the device's lateral button for accurate and efficient data capture.
+</Note>
+
+## Available Operations
+
+<CardGroup cols={2}>
+  <Card title="Producción Nueva" icon="plus-square" iconType="solid">
+    Record new products coming from production lines
+  </Card>
+  <Card title="Ingreso de Armado" icon="rotate" iconType="solid">
+    Register assembled pieces and sleeves into inventory
+  </Card>
+  <Card title="Devolución no Armado" icon="rotate-left" iconType="solid">
+    Return unassembled pieces to stock
+  </Card>
+  <Card title="Devolución de Mercadería" icon="arrow-down-left" iconType="solid">
+    Process customer returns with invoice and client data
+  </Card>
+</CardGroup>
+
+---
+
+## Producción Nueva
+
+### Purpose
+Register newly manufactured products or pieces from the production line into the inventory system.
+
+### Use Cases
+- Registering new production batches
+- Adding freshly manufactured pieces to warehouse inventory
+- Recording new sleeves (mangas) produced
+
+### Workflow
+
+<Steps>
+  <Step title="Navigate to Production Entry">
+    From the main menu, tap **Ingresos** → **Producción Nueva**
+  </Step>
+  
+  <Step title="Scan QR Codes">
+    Press the **lateral button** on the Android device to scan QR codes of pieces or sleeves. The system displays a scanning interface with:
+    - Blue info banner with scanning instructions
+    - Large scan area with QR icon
+    - Real-time counter of scanned items
+  </Step>
+  
+  <Step title="Review Scanned Items">
+    Monitor the counter badge showing the number of codes scanned. The display shows:
+    - Blue circular badge with count
+    - "Códigos escaneados" label
+    - Empty state message when no items scanned
+  </Step>
+  
+  <Step title="Save Entry">
+    Tap the **"Guardar Ingreso"** button to register all scanned items. The button:
+    - Appears disabled (gray) until at least one item is scanned
+    - Turns blue when items are ready to save
+    - Includes a save icon for visual confirmation
+  </Step>
+</Steps>
+
+### Screen Reference
+
+The Producción Nueva screen (ProduccionNuevaScreen.kt:29-180) implements:
+- Real-time scan counter with state management
+- Interactive scan simulation area (tap to increment in preview mode)
+- Conditional save button enabling based on scan count
+- Clean, modern Material 3 design with rounded corners
+
+<Accordion title="Technical Implementation Details">
+  The screen uses `mutableIntStateOf` to track scanned items, with the save button conditionally styled:
+  ```kotlin
+  containerColor = if (scannCount > 0) Color(0xFF0061A6) else Color(0xFFB0BEC5)
+  ```
+  The interface provides visual feedback through color changes and the scan counter badge.
+</Accordion>
+
+---
+
+## Ingreso de Armado
+
+### Purpose
+Register pre-assembled pieces and sleeves that are being added to inventory from the assembly department.
+
+### Use Cases
+- Recording assembled components ready for packaging
+- Tracking pieces that have completed the assembly process
+- Managing inventory of ready-to-use assembled parts
+
+### Workflow
+
+<Steps>
+  <Step title="Access Assembly Entry">
+    Navigate to **Ingresos** → **Ingreso de Armado**
+  </Step>
+  
+  <Step title="Scan Assembled Items">
+    Use the lateral button to scan QR codes of assembled pieces or sleeves. The system shows:
+    - "Presione botón lateral para escanear código QR de la pieza / manga" instruction
+    - Scanning interface identical to Producción Nueva
+    - Live count of scanned items
+  </Step>
+  
+  <Step title="Complete Registration">
+    Press **"Guardar Ingreso"** to finalize the assembly entry
+  </Step>
+</Steps>
+
+### Screen Reference
+
+This operation uses the reusable `ScanningLayout` component (IngresoArmadoScreen.kt:8-24) with standardized parameters for consistent UX across inbound operations.
+
+---
+
+## Devolución no Armado
+
+### Purpose
+Return unassembled pieces back to inventory stock, typically when items were pulled for assembly but not used.
+
+### Use Cases
+- Returning excess pieces from assembly workstations
+- Restocking unused components
+- Correcting inventory allocation errors
+
+### Workflow
+
+<Steps>
+  <Step title="Open Return Screen">
+    Select **Ingresos** → **Devolución no Armado**
+  </Step>
+  
+  <Step title="Scan Items to Return">
+    Scan QR codes of pieces/sleeves being returned to stock using the device's lateral button
+  </Step>
+  
+  <Step title="Confirm Return">
+    Tap **"Guardar Ingreso"** to process the return and update inventory
+  </Step>
+</Steps>
+
+### Screen Reference
+
+Implemented using `ScanningLayout` (DevolucionNoArmadoScreen.kt:8-24) with title "Devolución no Armado" and subtitle "INGRESOS".
+
+---
+
+## Devolución de Mercadería
+
+### Purpose
+Process customer returns of finished goods, requiring additional information for traceability and customer service.
+
+### Use Cases
+- Processing customer returns with proper documentation
+- Tracking return reasons via invoice numbers
+- Maintaining customer return history
+
+### Required Information
+- **N° de Factura** (Invoice Number): Format example `FC-A-00012345`
+- **Cliente** (Customer): Name or business name
+- QR codes of returned merchandise
+
+### Workflow
+
+<Steps>
+  <Step title="Navigate to Returns">
+    Go to **Ingresos** → **Devolución de Mercadería**
+  </Step>
+  
+  <Step title="Enter Required Data">
+    Fill in the mandatory fields in the white card at the top:
+    - **N° de Factura**: Enter the invoice number (e.g., FC-A-00012345)
+    - **Cliente**: Enter customer name or business name
+    
+    Both fields are marked with red asterisks (*) indicating they're required.
+  </Step>
+  
+  <Step title="Scan Returned Items">
+    Use the lateral button to scan QR codes of the merchandise being returned. The info banner reads: "Presione botón lateral para escanear código QR de la mercadería devuelta"
+  </Step>
+  
+  <Step title="Save Return">
+    Press **"Guardar Ingreso"** to complete the return process
+  </Step>
+</Steps>
+
+### Screen Reference
+
+The Devolución de Mercadería screen (DevolucionMercaderiaScreen.kt:21-129) extends the standard scanning layout with an `extraContent` section containing:
+- White card with elevation and rounded corners
+- Two text input fields with icons (Description icon for invoice, Person icon for customer)
+- Placeholder text for guidance
+- Blue focus borders matching the app's primary color
+
+<Accordion title="Input Field Details">
+  Fields use Material 3 `OutlinedTextField` components with:
+  - Unfocused border: `Color(0xFFE0E0E0)` (light gray)
+  - Focused border: `Color(0xFF0061A6)` (primary blue)
+  - Rounded corners (12dp radius)
+  - Icon indicators for field type
+</Accordion>
+
+---
+
+## Common Features
+
+### QR Code Scanning
+
+<Tabs>
+  <Tab title="Hardware Integration">
+    EnvaSistema is designed for Android warehouse terminals with dedicated scan buttons:
+    - Press the **lateral button** on the device to activate the scanner
+    - Scanner reads QR codes on pieces, sleeves, and packages
+    - Each successful scan increments the counter
+  </Tab>
+  
+  <Tab title="Simulation Mode">
+    For testing and demos:
+    - Tap the scanning area (large box with QR icon)
+    - Counter increments to simulate a successful scan
+    - Message displays: "(Toque aquí para simular escaneo)"
+  </Tab>
+</Tabs>
+
+### Visual Feedback
+
+All inbound operations provide consistent visual feedback:
+
+- **Info Banner**: Blue background with left border accent, contains scanning instructions
+- **Scan Counter**: Circular blue badge with white text showing item count
+- **Empty State**: Gray text "No hay códigos escaneados" when count is zero
+- **Save Button**: 
+  - Gray when disabled (no items scanned)
+  - Blue when enabled (items ready to save)
+  - Includes appropriate icon (Save icon for most operations)
+
+### Navigation
+
+Access all inbound operations through the main menu:
+
+1. Tap **Ingresos** from the home screen
+2. Select the appropriate operation type from the menu
+3. Use the back arrow in the header to return to the Ingresos menu
+4. The subtitle displays "INGRESOS" to maintain context awareness
+
+---
+
+## Best Practices
+
+<Warning>
+Ensure all QR codes are clean and clearly visible before scanning to avoid read errors.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Data Accuracy">
+    - Verify the scan counter matches the physical item count before saving
+    - Double-check invoice numbers and customer names for returns
+    - Scan items individually to ensure accurate inventory tracking
+  </Accordion>
+  
+  <Accordion title="Workflow Efficiency">
+    - Group similar items together when performing bulk entries
+    - Complete the entire scanning process before tapping save
+    - Use the appropriate operation type for each scenario to maintain data integrity
+  </Accordion>
+  
+  <Accordion title="Error Prevention">
+    - For customer returns, always obtain invoice documentation before processing
+    - Verify assembly status before choosing between "Ingreso de Armado" and "Devolución no Armado"
+    - Ensure items being returned match the selected operation type
+  </Accordion>
+</AccordionGroup>
+
+## Related Operations
+
+<CardGroup cols={3}>
+  <Card title="Outbound Operations" icon="arrow-up-from-bracket" href="/features/outbound-operations">
+    Manage inventory exits and sales
+  </Card>
+  <Card title="Inventory Transfers" icon="arrows-left-right" href="/features/inventory-transfers">
+    Move items between locations
+  </Card>
+  <Card title="Transformations" icon="screwdriver-wrench" href="/features/transformations">
+    Assemble and disassemble packages
+  </Card>
+</CardGroup>

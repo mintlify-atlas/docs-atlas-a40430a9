@@ -1,0 +1,231 @@
+---
+title: 'App Navigation'
+description: 'Learn how to navigate the EnvaSistema app and access different warehouse operations'
+icon: 'compass'
+---
+
+## Overview
+
+EnvaSistema uses a hierarchical navigation structure that guides you from the main menu to specific warehouse operations. The app is designed for efficient, touch-friendly navigation on warehouse handheld terminals.
+
+## Main Menu Structure
+
+When you first launch the app, you'll see the home screen with four main operation categories:
+
+<CardGroup cols={2}>
+  <Card title="INGRESOS" icon="box-open">
+    Production, assembly, and returns
+  </Card>
+  <Card title="SALIDAS" icon="arrow-right-from-bracket">
+    Sales, packages, waste, and donations
+  </Card>
+  <Card title="MOVIMIENTOS" icon="arrows-left-right">
+    Transfers between locations
+  </Card>
+  <Card title="TRANSFORMACIONES" icon="wand-magic-sparkles">
+    Disassemble finished product packages
+  </Card>
+</CardGroup>
+
+### Navigation Implementation
+
+The navigation system is implemented in `AppNavigation.kt:36-105` using Jetpack Compose's NavHost:
+
+```kotlin
+NavHost(navController = navController, startDestination = Screen.Home.route) {
+    composable(Screen.Home.route) {
+        HomeScreen(
+            onIngresosClick = { navController.navigate(Screen.Ingresos.route) },
+            onSalidasClick = { navController.navigate(Screen.Salidas.route) },
+            // ...
+        )
+    }
+}
+```
+
+## Home Screen Elements
+
+<Steps>
+  <Step title="Status Bar">
+    Located at the top-right, shows:
+    - **Connection status**: Green indicator with terminal ID (e.g., "C66 · ONLINE")
+    - **User badge**: Shows current logged-in user (e.g., "J. PÉREZ")
+    - **Logout button**: Tap to sign out of your session
+  </Step>
+  
+  <Step title="Header Section">
+    Displays:
+    - System title: "SISTEMA DE GESTIÓN"
+    - App name: "Gestión de Almacén Móvil"
+  </Step>
+  
+  <Step title="Date and Shift Info">
+    Shows the current date and active shift (e.g., "Turno Mañana", "Turno Tarde")
+  </Step>
+  
+  <Step title="Operation Menu">
+    Four large, easy-to-tap cards for main operations
+  </Step>
+</Steps>
+
+### Header Component
+
+The home header (`HomeHeader.kt:23-132`) provides essential session information:
+
+```kotlin
+HomeHeader(
+    statusText = "C66 · ONLINE",
+    userName = "J. PÉREZ",
+    onLogoutClick = { /* Logout logic */ }
+)
+```
+
+## Ingresos (Receipts) Navigation
+
+Tapping **INGRESOS** takes you to a submenu with four receipt operation types:
+
+<CardGroup cols={2}>
+  <Card title="Producción Nueva" icon="box">
+    New products from production
+  </Card>
+  <Card title="Ingreso de Armado" icon="puzzle-piece">
+    Pre-assembled pieces and sleeves
+  </Card>
+  <Card title="Devolución no Armado" icon="rotate-left">
+    Unassembled piece returns to stock
+  </Card>
+  <Card title="Devolución de Mercadería" icon="receipt">
+    Customer returns (requires invoice number)
+  </Card>
+</CardGroup>
+
+<Info>
+  Each operation has a descriptive subtitle to help you choose the correct type quickly.
+</Info>
+
+## Salidas (Issues) Navigation
+
+Tapping **SALIDAS** takes you to a submenu with four issue operation types:
+
+<CardGroup cols={2}>
+  <Card title="Venta de PT" icon="shopping-cart">
+    Finished product sales
+  </Card>
+  <Card title="Armar Paquetes" icon="box-archive">
+    Group pieces into packages for dispatch
+  </Card>
+  <Card title="Merma (Molino)" icon="triangle-exclamation">
+    Inventory destruction (irreversible)
+  </Card>
+  <Card title="Donaciones" icon="heart">
+    External cost centers or donations
+  </Card>
+</CardGroup>
+
+<Warning>
+  The **Merma (Molino)** operation is highlighted in red with warning indicators. This operation permanently destroys inventory and cannot be reversed. It requires supervisor confirmation.
+</Warning>
+
+## Movimientos (Transfers) Navigation
+
+Tapping **MOVIMIENTOS** takes you directly to:
+
+- **Transferencia de Inventario**: Transfer items between warehouse locations
+
+## Transformaciones (Transformations) Navigation
+
+Tapping **TRANSFORMACIONES** takes you directly to:
+
+- **Desarmar Paquetes**: Disassemble finished product packages back into individual pieces
+
+## Navigation Patterns
+
+### Back Navigation
+
+All secondary screens include a **back button** in the header:
+
+<Tip>
+  The back button is always located in the top-left corner of colored header bars. Tap it to return to the previous screen.
+</Tip>
+
+```kotlin
+SecondaryHeader(
+    title = "Ingresos",
+    subtitle = "Seleccione el tipo de ingreso",
+    onBackClick = { navController.popBackStack() }
+)
+```
+
+### Menu Cards
+
+All menu items are presented as large, touch-friendly cards (`MenuCard.kt:19-99`) with:
+
+- **Left accent strip**: Color-coded by operation type
+- **Icon section**: Visual identifier with colored background
+- **Title and subtitle**: Clear operation name and description
+- **Right arrow**: Indicates the card is tappable
+
+<Info>
+  Cards are sized at 100dp height for easy tapping with gloved hands on warehouse terminals.
+</Info>
+
+## Screen Routes
+
+The app uses the following route structure (defined in `AppNavigation.kt:13-33`):
+
+| Route | Screen | Access From |
+|-------|--------|-------------|
+| `home` | Home Screen | App start |
+| `ingresos` | Receipts Menu | Home |
+| `produccion_nueva` | New Production | Ingresos |
+| `ingreso_armado` | Assembly Receipt | Ingresos |
+| `devolucion_no_armado` | Unassembled Return | Ingresos |
+| `devolucion_mercaderia` | Merchandise Return | Ingresos |
+| `salidas` | Issues Menu | Home |
+| `venta_pt` | Finished Product Sale | Salidas |
+| `armar_paquetes` | Package Assembly | Salidas |
+| `merma_molino` | Waste (Destruction) | Salidas |
+| `donaciones` | Donations | Salidas |
+| `movimientos` | Inventory Transfer | Home |
+| `transformaciones` | Disassemble Packages | Home |
+
+## Best Practices
+
+<Tip>
+  **Quick Navigation**: Familiarize yourself with the menu structure to navigate quickly during busy shifts. All operations are just 2 taps away from the home screen.
+</Tip>
+
+<Tip>
+  **Check Your Session**: Always verify your user name and shift information in the header before starting operations.
+</Tip>
+
+<Tip>
+  **Read Subtitles**: Menu card subtitles provide important context about each operation. Take a moment to read them before selecting.
+</Tip>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The back button doesn't work">
+    If the back button becomes unresponsive, try navigating to the home screen using the app's main menu. If the issue persists, restart the app.
+  </Accordion>
+  
+  <Accordion title="I tapped the wrong menu item">
+    Simply use the back button in the header to return to the previous menu and select the correct operation.
+  </Accordion>
+  
+  <Accordion title="The offline indicator appears">
+    If the status changes from "ONLINE" to "OFFLINE", the terminal has lost network connectivity. Some operations may be restricted. Contact IT support if the issue persists.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Barcode Scanning" icon="barcode" href="/guide/barcode-scanning">
+    Learn how to scan items efficiently
+  </Card>
+  <Card title="Shift Management" icon="clock" href="/guide/shift-management">
+    Understand shift information and user sessions
+  </Card>
+</CardGroup>
